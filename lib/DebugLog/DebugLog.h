@@ -1,5 +1,6 @@
+#include "Printable.h"
 
-class DebugLog
+class DebugLog : public Printable
 {
 private:
 	char _szName[20];
@@ -9,5 +10,6 @@ public:
 	~DebugLog();
 
 	void WriteHexString(const byte *pByte, byte length);
+	virtual size_t printTo(Print& p) const = 0;
 };
 

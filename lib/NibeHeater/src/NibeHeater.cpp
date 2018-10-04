@@ -32,7 +32,10 @@
 //
 
 #include "NibeHeater.h"
+#include "RemoteDebug.h"
 
+#define DEBUG_PRINT rdebugDln	// Telnet debug
+extern RemoteDebug Debug;
 
 NibeHeater::NibeHeater()
 {
@@ -69,14 +72,15 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 	if (_debugFunc != nullptr)
 	{
 		int i = 0;
-		char buff[100];
+		char buff[1000];
 		for (i = 0; i<pMsg->msg.length; i++)
 		{
-			sprintf (buff +(i*3), "%x", pMsg->buffer[i]);
+			sprintf (buff +(i*3), "-%x", pMsg->buffer[i]);
 		}
-		_debugFunc(buff);//("Testdebug"); //->WriteHexString(pMsg->buffer, pMsg->msg.length + 5);
+		//_debugFunc(buff);//("Testdebug"); //->WriteHexString(pMsg->buffer, pMsg->msg.length + 5);
 	}
 
+	DEBUG_PRINT ("Command: %d", pMsg->msg.command);
 	switch (pMsg->msg.command)
 	{
 	case DATABLOCK:
@@ -111,11 +115,15 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 					data[3] = *(pMsg->msg.data + i + 3);
 				}
 			}
+			char buf[100];
+			sprintf (buf, "IO: I%d D%s S%u", idx, data, size);
+			_debugFunc(buf);
 			_ioContainer->SetIoVal(idx, data, size);
 		}
 	}
 	break;
 	case READREQ:
+		_debugFunc("READREQ");
 		if (ReadRequest(_ioContainer->GetExpiredIoElement(R), &_reqMsg))
 		{
 			//_msgHandler->Send(ENQ);
@@ -127,10 +135,12 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 		}
 	break;
 	case WRITEREQ:
+		_debugFunc("WRITEREQ");
 		if (WriteRequest(_ioContainer->GetExpiredIoElement(W), &_reqMsg))
 		{
 			//_msgHandler->Send(ENQ);
 			_msgHandler->SendMessage(&_reqMsg);
+			_debugFunc("Send");
 		}
 		else
 		{
@@ -138,6 +148,7 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 		}
 		break;
 	default:
+		_debugFunc("Unknown");
 		_msgHandler->Send(ACK);	// This is an unknown message command, but we still send ack
 		bOk = false;
 	}
@@ -193,7 +204,8 @@ bool NibeHeater::WriteRequest(int idx, Message *pMsg)
 		#else
 		pMsg->msg.data[1] = pIo->nIdentifer & 0x00ff;
 		pMsg->msg.data[0] = pIo->nIdentifer >> 8;
-		#endif		memcpy(&pMsg->msg.data[2], &pIo->ioVal, dataSize);
+		#endif		
+		memcpy(&pMsg->msg.data[2], &pIo->ioVal, dataSize);
 
 		bOk = true;
 	}

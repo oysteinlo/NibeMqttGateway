@@ -19,11 +19,13 @@
 #define MQTT_PORT 1883
 #endif
 
-#define DEBUG_PRINT rdebugAln
+#define DEBUG_PRINT rdebugDln	// Telnet debug
+//#define DEBUG_PRINT printf
+
 #define ENABLE_PIN 0 // GPIO_0 RS485 transceiver enablepinRS485 transceiver enablepin
 
 
-#define HOST_NAME "debug" // PLEASE CHANGE IT
+#define HOST_NAME "ESP debug" 
 
 
 AsyncMqttClient mqttClient;
@@ -60,7 +62,7 @@ IoElement_t iopoints[] =
 		/*19*/ {"BT50 Room Temp S1 Average", 		40195, 		eS16, 	R, 		10, 	60000,	0.1f},
 	};
 const byte numIoPoints = sizeof(iopoints) / sizeof(IoElement_t);
-IoContainer io("Nibe", iopoints, numIoPoints);
+IoContainer io("TestNibe", iopoints, numIoPoints);
 
 NibeMessage *pNibeMsgHandler;
 NibeHeater nibeHandler(&io, &pNibeMsgHandler);
@@ -103,7 +105,7 @@ void connectToWifi() {
 
   WiFi.hostname(HOST_NAME);
   // print your WiFi shield's IP address:
-  DEBUG_PRINT("IP Address: %s", WiFi.localIP().toString().c_str());
+  
 }
 
 void connectToMqtt() {
@@ -113,7 +115,8 @@ void connectToMqtt() {
 }
 
 void onWifiConnect(const WiFiEventStationModeGotIP& event) {
-  DEBUG_PRINT("Connected to Wi-Fi.");
+	Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
   connectToMqtt();
 }
 
@@ -183,14 +186,16 @@ void setup() {
   }
 #endif
 
-  connectToWifi();
-
+ 
   Debug.begin("DEBUG"); // Initiaze the telnet server
   Debug.setResetCmdEnabled(true); // Enable the reset command
   Debug.setCallBackProjectCmds(&processCmdRemoteDebug);
-  Debug.setSerialEnabled(true);
+  //Debug.setSerialEnabled(true);
+	// DebugLog p("T");
+  // nibeHandler.AttachDebug(p);
 
-  nibeHandler.AttachDebug(DebugPrint);
+	connectToWifi();
+
 }
 
 byte readreq[] = {0x5c, 0x0, 0x20, 0x69, 0x0, 0x49};
@@ -223,10 +228,12 @@ byte testdata[] = {0x5c, 0x0, 0x20, 0x68, 0x50, // DATA
 
 
 unsigned int maxLoopTime = 0;
+unsigned int startTime = 0;
+unsigned int prevTime = 0;
 void loop() {
 
-    static unsigned int prevTime = millis();
-    static unsigned int startTime = millis();
+
+    
 
     unsigned int now = millis();
     if (now - prevTime > maxLoopTime)
@@ -234,20 +241,22 @@ void loop() {
         maxLoopTime = now - prevTime;
     }
 
-  if (millis() - startTime > 5000)
+  if (now - startTime > 5000)
 	{ // run every 25000 ms
-		startTime = millis();
+		startTime = now;
+		
+		 for (unsigned int i = 0; i < sizeof(readreq); i++)
+		 {
+		   pNibeMsgHandler->AddByte(readreq[i]);
+		   nibeHandler.Loop();
+		 }
 
-		//  for (int i = 0; i < sizeof(readreq); i++)
-		//  {
-		//    pNibeMsgHandler->AddByte(readreq[i]);
-		//    nibeHandler.Loop();
-		//  }
+		 for (int i = 0; i < 100; i++)
+		 {
+		   nibeHandler.Loop();
+		 }
 
-		//  for (int i = 0; i < 100; i++)
-		//  {
-		//    nibeHandler.Loop();
-		//  }
+		Serial.printf("Size: %d\n", sizeof(testdata));
 
 		for (unsigned int i = 0; i < sizeof(testdata); i++)
 		{
@@ -258,18 +267,17 @@ void loop() {
   
 
 
-    while (Serial.available())
-	  {
-		  pNibeMsgHandler->AddByte(Serial.read());
-	  }
+    // while (Serial.available())
+	  // {
+		//   pNibeMsgHandler->AddByte(Serial.read());
+	  // }
 
 	  nibeHandler.Loop();
 	  io.loop();
 
-
     Debug.handle();
 
-  prevTime = millis();
+  	prevTime = millis();
 
     yield();
 }
