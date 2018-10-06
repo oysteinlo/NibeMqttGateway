@@ -73,7 +73,7 @@ private:
 
 
 public:
-	IoContainer(char *szName, IoElement_t *pIo, size_t size);
+	IoContainer(const char *szName, IoElement_t *pIo, size_t size);
 	~IoContainer();
 
 	void PublishFuncPtr(pPublish pPub);

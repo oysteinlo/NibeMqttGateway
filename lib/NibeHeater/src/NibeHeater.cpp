@@ -28,8 +28,6 @@
 *
 *
 */
-// NibeHeater.cpp : Defines the entry point for the console application.
-//
 
 #include "NibeHeater.h"
 #include "RemoteDebug.h"
@@ -47,7 +45,7 @@ NibeHeater::NibeHeater(NibeMessage **ppMsg)
 	_msgHandler = *ppMsg = new NibeMessage(this);
 }
 
-NibeHeater::NibeHeater(IoContainer *pIoContainer, NibeMessage **ppMsg)
+NibeHeater::NibeHeater(NibeMessage **ppMsg, IoContainer *pIoContainer)
 {
 	_ioContainer = pIoContainer;
 	_msgHandler = *ppMsg = new NibeMessage(this);
@@ -71,16 +69,12 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 
 	if (_debugFunc != nullptr)
 	{
-		int i = 0;
-		char buff[1000];
-		for (i = 0; i<pMsg->msg.length; i++)
-		{
-			sprintf (buff +(i*3), "-%x", pMsg->buffer[i]);
-		}
+		//DEBUG_PRINT("%s", _msgHandler->LogMessage());
+		//Serial.println(*_msgHandler);
 		//_debugFunc(buff);//("Testdebug"); //->WriteHexString(pMsg->buffer, pMsg->msg.length + 5);
 	}
+	Debug.println(*_msgHandler);
 
-	DEBUG_PRINT ("Command: %d", pMsg->msg.command);
 	switch (pMsg->msg.command)
 	{
 	case DATABLOCK:
@@ -115,19 +109,16 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 					data[3] = *(pMsg->msg.data + i + 3);
 				}
 			}
-			char buf[100];
-			sprintf (buf, "IO: I%d D%s S%u", idx, data, size);
-			_debugFunc(buf);
 			_ioContainer->SetIoVal(idx, data, size);
 		}
 	}
 	break;
 	case READREQ:
-		_debugFunc("READREQ");
 		if (ReadRequest(_ioContainer->GetExpiredIoElement(R), &_reqMsg))
 		{
-			//_msgHandler->Send(ENQ);
 			_msgHandler->SendMessage(&_reqMsg);
+			DEBUG_PRINT("READREQ");
+			Debug.println(*_msgHandler);
 		}
 		else
 		{
@@ -135,12 +126,11 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 		}
 	break;
 	case WRITEREQ:
-		_debugFunc("WRITEREQ");
 		if (WriteRequest(_ioContainer->GetExpiredIoElement(W), &_reqMsg))
 		{
-			//_msgHandler->Send(ENQ);
 			_msgHandler->SendMessage(&_reqMsg);
-			_debugFunc("Send");
+			DEBUG_PRINT("WRITREQ");
+			Debug.println(*_msgHandler);
 		}
 		else
 		{
@@ -148,7 +138,7 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 		}
 		break;
 	default:
-		_debugFunc("Unknown");
+		DEBUG_PRINT("Unknown message");
 		_msgHandler->Send(ACK);	// This is an unknown message command, but we still send ack
 		bOk = false;
 	}

@@ -31,7 +31,7 @@ private:
 public:
 	NibeHeater();
 	NibeHeater(NibeMessage **ppMsg);
-	NibeHeater(IoContainer *pIoContainer, NibeMessage **pMsg);
+	NibeHeater(NibeMessage **pMsg, IoContainer *pIoContainer);
 	void AttachDebug(pDebugFunc debugfunc);
 	void Loop();
 	bool HandleMessage(Message * pMsg);

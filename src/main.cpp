@@ -4,6 +4,8 @@
 #include <AsyncMqttClient.h>
 #include "NibeHeater.h"
 #include "IoContainer.h"
+
+#define BUFFER_PRINT 300
 #include "RemoteDebug.h"        //https://github.com/JoaoLopesF/RemoteDebug
 
 #define WIFI_SSID "WiFi2"
@@ -62,10 +64,10 @@ IoElement_t iopoints[] =
 		/*19*/ {"BT50 Room Temp S1 Average", 		40195, 		eS16, 	R, 		10, 	60000,	0.1f},
 	};
 const byte numIoPoints = sizeof(iopoints) / sizeof(IoElement_t);
-IoContainer io("TestNibe", iopoints, numIoPoints);
+IoContainer io("Nibe", iopoints, numIoPoints);
 
 NibeMessage *pNibeMsgHandler;
-NibeHeater nibeHandler(&io, &pNibeMsgHandler);
+NibeHeater nibeHandler(&pNibeMsgHandler, &io);
 
 void processCmdRemoteDebug();
 
@@ -167,7 +169,10 @@ bool publish(char *topic, char *value)
 }
 
 void setup() {
+	pinMode(ENABLE_PIN, OUTPUT);	// RS485 enable pin
+
   Serial.begin(9600);
+	pNibeMsgHandler->SetReplyCallback(SendReply);
 
   wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
   wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
@@ -193,7 +198,7 @@ void setup() {
   //Debug.setSerialEnabled(true);
 	// DebugLog p("T");
   // nibeHandler.AttachDebug(p);
-
+	io.PublishFuncPtr(publish);
 	connectToWifi();
 
 }
@@ -241,6 +246,7 @@ void loop() {
         maxLoopTime = now - prevTime;
     }
 
+#if 0
   if (now - startTime > 5000)
 	{ // run every 25000 ms
 		startTime = now;
@@ -256,8 +262,6 @@ void loop() {
 		   nibeHandler.Loop();
 		 }
 
-		Serial.printf("Size: %d\n", sizeof(testdata));
-
 		for (unsigned int i = 0; i < sizeof(testdata); i++)
 		{
 		  pNibeMsgHandler->AddByte(testdata[i]);
@@ -265,12 +269,13 @@ void loop() {
 		}
 	}
   
+#else
 
-
-    // while (Serial.available())
-	  // {
-		//   pNibeMsgHandler->AddByte(Serial.read());
-	  // }
+    while (Serial.available())
+	  {
+			pNibeMsgHandler->AddByte(Serial.read());
+	  }
+#endif
 
 	  nibeHandler.Loop();
 	  io.loop();
@@ -290,6 +295,6 @@ void processCmdRemoteDebug() {
 
 	if (Debug.isActive(Debug.ANY)) {
 			rdebugAln("Max loop time %u", maxLoopTime);
-	}
+		}
   }
 }

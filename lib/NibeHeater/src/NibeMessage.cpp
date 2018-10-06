@@ -22,17 +22,13 @@
 *	and/or reduces the room temperature.
 */
 
-NibeMessage::NibeMessage()
+NibeMessage::NibeMessage() : Printable()
 {
 }
 
-NibeMessage::NibeMessage(NibeHeater *pNibe)
+NibeMessage::NibeMessage(NibeHeater *pNibe) : Printable()
 {
 	_pNibe = pNibe;
-}
-
-NibeMessage::~NibeMessage()
-{
 }
 
 void NibeMessage::AddByte(byte b)
@@ -210,4 +206,33 @@ bool NibeMessage::IsDataReady()
 Message* NibeMessage::GetMessage()
 {
 	return &_msg;
+}
+
+
+size_t NibeMessage::printTo(Print& p) const
+{
+	size_t n = 0;
+	n += p.print("Data:");
+    for(int i = 0; i < _msg.msg.length + Data + 1; i++) {	// Control data + CRC
+        n += p.print(' ');
+        n += p.print(_msg.buffer[i], HEX);
+    }
+    return n;
+} 
+
+char* NibeMessage::LogMessage()
+{
+	int idx = 5; //"Data: "
+	sprintf (_printBuffer, "Data:");
+    for(int i = 0; i < _msg.msg.length + Data + 1; i++) {	// Control data + CRC
+   		if (idx + 4 < PRINT_BUF_SIZE) {
+			sprintf (_printBuffer + idx, " %02x", _msg.buffer[i]);
+			idx = idx + 3;
+    	}
+		else{
+		*(_printBuffer + idx + 1) = 0; // Nullterm
+		}
+	}
+	*(_printBuffer + idx + 1) = 0; // Nullterm
+    return _printBuffer;
 }
