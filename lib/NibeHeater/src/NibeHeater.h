@@ -16,26 +16,30 @@ typedef enum
 } CommandSpecifier;
 
 typedef void(*pDebugFunc) (char*);
+typedef bool(*pFunc) (byte);
 
 class NibeHeater
 {
 
 private:
-	NibeMessage *_msgHandler = nullptr;
+	NibeMessage *_rxMsgHandler = nullptr;
+	NibeMessage *_txMsgHandler = nullptr;
 	IoContainer *_ioContainer = nullptr;
 	pDebugFunc _debugFunc = nullptr;
 
 	int _requestIo;
-	Message _reqMsg;
+	//Message _reqMsg;	// Relpy messge
 
 public:
 	NibeHeater();
 	NibeHeater(NibeMessage **ppMsg);
 	NibeHeater(NibeMessage **pMsg, IoContainer *pIoContainer);
 	void AttachDebug(pDebugFunc debugfunc);
+	void SetReplyCallback(pFunc func);
+
 	void Loop();
 	bool HandleMessage(Message * pMsg);
-	bool Request();
+	//bool Request();
 	bool ReadRequest(int idx, Message * pMsg);
 	bool WriteRequest(int idx, Message * pMsg);
 };

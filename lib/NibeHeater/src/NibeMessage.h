@@ -47,6 +47,7 @@ class NibeHeater;
 class NibeMessage : public Printable
 {
 private:
+	char _name[10];
 	int _nByteIdx = 0;
 	Message _msg;// = { 0 };
 	NibeHeater *_pNibe = nullptr;
@@ -62,7 +63,7 @@ private:
 
 public:
 	NibeMessage();
-	NibeMessage(NibeHeater * pNibe);
+	NibeMessage(NibeHeater * pNibe, char* pName);
 
 	void AddByte(byte b);
 
@@ -74,14 +75,9 @@ public:
 
 	unsigned long idleTime();
 
-	//void SendAck();
-
 	void Send(Reply b);
 	
-
-	//void SendNack();
-
-	bool SendMessage(Message * pMsg);
+	bool SendMessage();
 
 	bool IsDataReady();
 
