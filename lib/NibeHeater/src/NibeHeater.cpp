@@ -28,26 +28,30 @@
 *
 *
 */
-// NibeHeater.cpp : Defines the entry point for the console application.
-//
 
 #include "NibeHeater.h"
+#include "RemoteDebug.h"
 
+#define DEBUG_PRINT rdebugDln	// Telnet debug
+extern RemoteDebug Debug;
 
 NibeHeater::NibeHeater()
 {
-	_msgHandler = new NibeMessage(this);
+	_rxMsgHandler = new NibeMessage(this, "Rx");
+	_txMsgHandler = new NibeMessage(this, "Tx");
 }
 
 NibeHeater::NibeHeater(NibeMessage **ppMsg)
 {
-	_msgHandler = *ppMsg = new NibeMessage(this);
+	_rxMsgHandler = *ppMsg = new NibeMessage(this, "Rx");
+	_txMsgHandler = new NibeMessage(this, "Tx");
 }
 
-NibeHeater::NibeHeater(IoContainer *pIoContainer, NibeMessage **ppMsg)
+NibeHeater::NibeHeater(NibeMessage **ppMsg, IoContainer *pIoContainer)
 {
 	_ioContainer = pIoContainer;
-	_msgHandler = *ppMsg = new NibeMessage(this);
+	_rxMsgHandler = *ppMsg = new NibeMessage(this, "Rx");
+	_txMsgHandler = new NibeMessage(this, "Tx");
 }
 
 void NibeHeater::AttachDebug(pDebugFunc debugfunc)
@@ -55,9 +59,17 @@ void NibeHeater::AttachDebug(pDebugFunc debugfunc)
 	_debugFunc = debugfunc;
 }
 
+
+void NibeHeater::SetReplyCallback(pFunc func)
+{
+	_rxMsgHandler->SetReplyCallback(func);
+	_txMsgHandler->SetReplyCallback(func);
+
+}
+
 void NibeHeater::Loop()
 {
-	_msgHandler->Loop();
+	_rxMsgHandler->Loop();
 }
 
 //http://www.varmepumpsforum.com/vpforum/index.php?topic=39325.60
@@ -68,21 +80,18 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 
 	if (_debugFunc != nullptr)
 	{
-		int i = 0;
-		char buff[100];
-		for (i = 0; i<pMsg->msg.length; i++)
-		{
-			sprintf (buff +(i*3), "%x", pMsg->buffer[i]);
-		}
-		_debugFunc(buff);//("Testdebug"); //->WriteHexString(pMsg->buffer, pMsg->msg.length + 5);
+		//DEBUG_PRINT("%s", _msgHandler->LogMessage());
+		//Serial.println(*_msgHandler);
+		//_debugFunc(buff);//("Testdebug"); //->WriteHexString(pMsg->buffer, pMsg->msg.length + 5);
 	}
+	//Debug.println(*_rxMsgHandler);
 
 	switch (pMsg->msg.command)
 	{
 	case DATABLOCK:
 	case READDATA:
 	{
-		_msgHandler->Send(ACK);
+		_rxMsgHandler->Send(ACK);
 
 		const int datalength = 4;
 		for (int i = 0; i < pMsg->msg.length; i += datalength)
@@ -116,39 +125,42 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 	}
 	break;
 	case READREQ:
-		if (ReadRequest(_ioContainer->GetExpiredIoElement(R), &_reqMsg))
+		if (ReadRequest(_ioContainer->GetExpiredIoElement(R), _txMsgHandler->GetMessage()))
 		{
-			//_msgHandler->Send(ENQ);
-			_msgHandler->SendMessage(&_reqMsg);
+			_txMsgHandler->SendMessage();
+			DEBUG_PRINT("READREQ");
+			Debug.println(*_txMsgHandler);
 		}
 		else
 		{
-			_msgHandler->Send(ACK);
+			_txMsgHandler->Send(ACK);
 		}
 	break;
 	case WRITEREQ:
-		if (WriteRequest(_ioContainer->GetExpiredIoElement(W), &_reqMsg))
+		if (WriteRequest(_ioContainer->GetExpiredIoElement(W), _txMsgHandler->GetMessage()))
 		{
-			//_msgHandler->Send(ENQ);
-			_msgHandler->SendMessage(&_reqMsg);
+			_txMsgHandler->SendMessage();
+			DEBUG_PRINT("WRITREQ");
+			Debug.println(*_txMsgHandler);
 		}
 		else
 		{
-			_msgHandler->Send(ACK);
+			_txMsgHandler->Send(ACK);
 		}
 		break;
 	default:
-		_msgHandler->Send(ACK);	// This is an unknown message command, but we still send ack
+		DEBUG_PRINT("Unknown message");
+		_txMsgHandler->Send(ACK);	// This is an unknown message command, but we still send ack
 		bOk = false;
 	}
 
 	return bOk;
 }
 
-bool NibeHeater::Request()
-{
-	return _msgHandler->SendMessage(&_reqMsg);
-}
+// bool NibeHeater::Request()
+// {
+// 	return _msgHandler->SendMessage(&_reqMsg);
+// }
 
 bool NibeHeater::ReadRequest(int idx, Message *pMsg)
 {
@@ -193,7 +205,8 @@ bool NibeHeater::WriteRequest(int idx, Message *pMsg)
 		#else
 		pMsg->msg.data[1] = pIo->nIdentifer & 0x00ff;
 		pMsg->msg.data[0] = pIo->nIdentifer >> 8;
-		#endif		memcpy(&pMsg->msg.data[2], &pIo->ioVal, dataSize);
+		#endif		
+		memcpy(&pMsg->msg.data[2], &pIo->ioVal, dataSize);
 
 		bOk = true;
 	}

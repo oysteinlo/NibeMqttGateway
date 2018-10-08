@@ -4,6 +4,8 @@
 #include <AsyncMqttClient.h>
 #include "NibeHeater.h"
 #include "IoContainer.h"
+
+#define BUFFER_PRINT 300
 #include "RemoteDebug.h"        //https://github.com/JoaoLopesF/RemoteDebug
 
 #define WIFI_SSID "WiFi2"
@@ -19,11 +21,13 @@
 #define MQTT_PORT 1883
 #endif
 
-#define DEBUG_PRINT rdebugAln
+#define DEBUG_PRINT rdebugDln	// Telnet debug
+//#define DEBUG_PRINT printf
+
 #define ENABLE_PIN 0 // GPIO_0 RS485 transceiver enablepinRS485 transceiver enablepin
 
 
-#define HOST_NAME "debug" // PLEASE CHANGE IT
+#define HOST_NAME "ESP debug" 
 
 
 AsyncMqttClient mqttClient;
@@ -37,33 +41,33 @@ RemoteDebug Debug;
 
 IoElement_t iopoints[] =
 	{
-		/* Tag								        Identifer,	Type	IoDir	Factor	Cyclic	Deadband*/
-		/*00*/ {"Alarm", 							45001, 		eS16, 	R, 		0, 		60000, 	0.1f},
-		/*01*/ {"AZ1-BT50 Room temp", 				41213, 		eS16, 	R, 		10, 	60000, 	0.1f},
-		/*02*/ {"BT1 Outdoor Temperature", 			40004, 		eS16, 	R, 		10, 	60000, 	0.1f},
-		/*03*/ {"Hot water temperature", 			40014, 		eS16, 	R, 		10, 	60000, 	0.1f},
-		/*04*/ {"Compressor starts EB100-EP14", 	43416, 		eS32, 	R, 		0, 		60000, 	0.1f},
-		/*05*/ {"Compressor State EP14", 			43427, 		eU8, 	R, 		0, 		60000, 	0.1f},
-		/*06*/ {"DegreeMinute32", 					40940, 		eS32, 	R, 		10, 	60000, 	0.1f},
-		/*07*/ {"Brine in temperature", 			40015, 		eS16, 	R, 		10, 	60000, 	0.1f},
-		/*08*/ {"Brine out temperature", 			40016, 		eS16, 	R, 		10, 	60000, 	0.1f},
-		/*09*/ {"Condensor out temperature", 		40017, 		eS16, 	R, 		10, 	60000, 	0.1f},
-		/*10*/ {"Hot gas temperature", 				40018, 		eS16, 	R, 		10, 	60000, 	0.1f},
-		/*11*/ {"Suction temperature", 				40022, 		eS16, 	R, 		10, 	60000, 	0.1f},
-		/*12*/ {"Return temperature", 				40012,		eS16, 	R, 		10, 	60000, 	0.1f},
-		/*13*/ {"EB100-EP14 Prio", 					44243, 		eU8, 	R, 		0, 		60000,	0.1f},
-		/*14*/ {"Tot. HW op.time compr", 			43424, 		eS32, 	R, 		0, 		60000, 	0.1f},
-		/*15*/ {"Tot.op.time compr", 				43420, 		eS32, 	R, 		0, 		60000, 	0.1f},
-		/*16*/ {"Software version", 				43001, 		eU16, 	R, 		0, 		60000, 	0.1f},
-		/*17*/ {"Holiday activated", 				48043, 		eU8, 	R, 		0, 		60000, 	0.1f},
-		/*18*/ {"BT50 Room Temp S1", 				40033, 		eS16, 	R, 		10, 	60000,	0.1f},
-		/*19*/ {"BT50 Room Temp S1 Average", 		40195, 		eS16, 	R, 		10, 	60000,	0.1f},
+		/* Tag								        				Identifer,	Type	IoDir	Factor	Cyclic	Deadband*/
+		/*00*/ {"Alarm", 												45001, 		eS16, 	R, 		0, 		60000, 	0.0f},
+		/*01*/ {"AZ1-BT50 Room temp", 					41213, 		eS16, 	R, 		10, 	60000, 	0.5f},
+		/*02*/ {"BT1 Outdoor Temperature", 			40004, 		eS16, 	R, 		10, 	60000, 	0.5f},
+		/*03*/ {"Hot water temperature", 				40014, 		eS16, 	R, 		10, 	60000, 	0.5f},
+		/*04*/ {"Compressor starts EB100-EP14", 43416, 		eS32, 	R, 		0, 		60000, 	0.0f},
+		/*05*/ {"Compressor State EP14", 				43427, 		eU8, 		R, 		0, 		60000, 	0.0f},
+		/*06*/ {"DegreeMinute32", 							40940, 		eS32, 	R, 		10, 	60000, 	0.0f},
+		/*07*/ {"Brine in temperature", 				40015, 		eS16, 	R, 		10, 	60000, 	0.5f},
+		/*08*/ {"Brine out temperature", 				40016, 		eS16, 	R, 		10, 	60000, 	0.5f},
+		/*09*/ {"Condensor out temperature", 		40017, 		eS16, 	R, 		10, 	60000, 	0.5f},
+		/*10*/ {"Hot gas temperature", 					40018, 		eS16, 	R, 		10, 	60000, 	0.5f},
+		/*11*/ {"Suction temperature", 					40022, 		eS16, 	R, 		10, 	60000, 	0.5f},
+		/*12*/ {"Return temperature", 					40012,		eS16, 	R, 		10, 	60000, 	0.5f},
+		/*13*/ {"EB100-EP14 Prio", 							44243, 		eU8, 		R, 		0, 		60000,	0.0f},
+		/*14*/ {"Tot. HW op.time compr", 				43424, 		eS32, 	R, 		0, 		60000, 	0.0f},
+		/*15*/ {"Tot.op.time compr", 						43420, 		eS32, 	R, 		0, 		60000, 	0.0f},
+		/*16*/ {"Software version", 						43001, 		eU16, 	R, 		0, 		60000, 	0.0f},
+		/*17*/ {"Holiday activated", 						48043, 		eU8, 		R, 		0, 		60000, 	0.0f},
+		/*18*/ {"BT50 Room Temp S1", 						40033, 		eS16, 	R, 		10, 	60000,	0.5f},
+		/*19*/ {"BT50 Room Temp S1 Average", 		40195, 		eS16, 	R, 		10, 	60000,	0.5f},
 	};
 const byte numIoPoints = sizeof(iopoints) / sizeof(IoElement_t);
 IoContainer io("Nibe", iopoints, numIoPoints);
 
 NibeMessage *pNibeMsgHandler;
-NibeHeater nibeHandler(&io, &pNibeMsgHandler);
+NibeHeater nibeHandler(&pNibeMsgHandler, &io);
 
 void processCmdRemoteDebug();
 
@@ -103,7 +107,7 @@ void connectToWifi() {
 
   WiFi.hostname(HOST_NAME);
   // print your WiFi shield's IP address:
-  DEBUG_PRINT("IP Address: %s", WiFi.localIP().toString().c_str());
+  
 }
 
 void connectToMqtt() {
@@ -113,7 +117,8 @@ void connectToMqtt() {
 }
 
 void onWifiConnect(const WiFiEventStationModeGotIP& event) {
-  DEBUG_PRINT("Connected to Wi-Fi.");
+	Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
   connectToMqtt();
 }
 
@@ -164,7 +169,10 @@ bool publish(char *topic, char *value)
 }
 
 void setup() {
+	pinMode(ENABLE_PIN, OUTPUT);	// RS485 enable pin
+
   Serial.begin(9600);
+	nibeHandler.SetReplyCallback(SendReply);
 
   wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
   wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
@@ -183,14 +191,16 @@ void setup() {
   }
 #endif
 
-  connectToWifi();
-
+ 
   Debug.begin("DEBUG"); // Initiaze the telnet server
   Debug.setResetCmdEnabled(true); // Enable the reset command
   Debug.setCallBackProjectCmds(&processCmdRemoteDebug);
-  Debug.setSerialEnabled(true);
+  //Debug.setSerialEnabled(true);
+	// DebugLog p("T");
+  // nibeHandler.AttachDebug(p);
+	io.PublishFuncPtr(publish);
+	connectToWifi();
 
-  nibeHandler.AttachDebug(DebugPrint);
 }
 
 byte readreq[] = {0x5c, 0x0, 0x20, 0x69, 0x0, 0x49};
@@ -223,10 +233,12 @@ byte testdata[] = {0x5c, 0x0, 0x20, 0x68, 0x50, // DATA
 
 
 unsigned int maxLoopTime = 0;
+unsigned int startTime = 0;
+unsigned int prevTime = 0;
 void loop() {
 
-    static unsigned int prevTime = millis();
-    static unsigned int startTime = millis();
+
+    
 
     unsigned int now = millis();
     if (now - prevTime > maxLoopTime)
@@ -234,20 +246,21 @@ void loop() {
         maxLoopTime = now - prevTime;
     }
 
-  if (millis() - startTime > 5000)
+#if 0
+  if (now - startTime > 5000)
 	{ // run every 25000 ms
-		startTime = millis();
+		startTime = now;
+		
+		 for (unsigned int i = 0; i < sizeof(readreq); i++)
+		 {
+		   pNibeMsgHandler->AddByte(readreq[i]);
+		   nibeHandler.Loop();
+		 }
 
-		//  for (int i = 0; i < sizeof(readreq); i++)
-		//  {
-		//    pNibeMsgHandler->AddByte(readreq[i]);
-		//    nibeHandler.Loop();
-		//  }
-
-		//  for (int i = 0; i < 100; i++)
-		//  {
-		//    nibeHandler.Loop();
-		//  }
+		 for (int i = 0; i < 100; i++)
+		 {
+		   nibeHandler.Loop();
+		 }
 
 		for (unsigned int i = 0; i < sizeof(testdata); i++)
 		{
@@ -256,20 +269,20 @@ void loop() {
 		}
 	}
   
-
+#else
 
     while (Serial.available())
 	  {
-		  pNibeMsgHandler->AddByte(Serial.read());
+			pNibeMsgHandler->AddByte(Serial.read());
 	  }
+#endif
 
 	  nibeHandler.Loop();
 	  io.loop();
 
-
     Debug.handle();
 
-  prevTime = millis();
+  	prevTime = millis();
 
     yield();
 }
@@ -282,6 +295,6 @@ void processCmdRemoteDebug() {
 
 	if (Debug.isActive(Debug.ANY)) {
 			rdebugAln("Max loop time %u", maxLoopTime);
-	}
+		}
   }
 }

@@ -1,9 +1,10 @@
 #pragma once
 #include "Arduino.h"
-
+#include "Printable.h"
 
 #define MAX_DATA_LENGTH 100
-#define MAX_MSG_BUFFER MAX_DATA_LENGTH + 5
+#define MAX_MSG_BUFFER (MAX_DATA_LENGTH + 5)
+#define PRINT_BUF_SIZE (MAX_MSG_BUFFER * 3)
 
 typedef enum
 {
@@ -43,9 +44,10 @@ typedef enum
 typedef bool(*pFunc) (byte);
 class NibeHeater;
 
-class NibeMessage
+class NibeMessage : public Printable
 {
 private:
+	char _name[10];
 	int _nByteIdx = 0;
 	Message _msg;// = { 0 };
 	NibeHeater *_pNibe = nullptr;
@@ -53,15 +55,15 @@ private:
 	unsigned long _busTime = 0;
 	unsigned long _nInterFrameGap = 100;
 
-	bool _bDataReady = false;;
-	bool _bInProgress = false;;
+	bool _bDataReady = false;
+	bool _bInProgress = false;
 
+	char _printBuffer[PRINT_BUF_SIZE];
 	pFunc pSendReply;
 
 public:
 	NibeMessage();
-	NibeMessage(NibeHeater * pNibe);
-	~NibeMessage();
+	NibeMessage(NibeHeater * pNibe, char* pName);
 
 	void AddByte(byte b);
 
@@ -73,20 +75,19 @@ public:
 
 	unsigned long idleTime();
 
-	//void SendAck();
-
 	void Send(Reply b);
 	
-
-	//void SendNack();
-
-	bool SendMessage(Message * pMsg);
+	bool SendMessage();
 
 	bool IsDataReady();
 
 	Message * GetMessage();
 
 	byte CheckSum(Message *pMsg = nullptr);
+
+	size_t printTo(Print& p) const override;
+
+	char* LogMessage();
 
 };
 

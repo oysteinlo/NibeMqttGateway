@@ -1,7 +1,7 @@
 #include "IoContainer.h"
 
 
-IoContainer::IoContainer(char *szName, IoElement_t *pIo, size_t size)
+IoContainer::IoContainer(const char *szName, IoElement_t *pIo, size_t size)
 {
 	strcpy(_szName, szName);
 	_pIo = pIo;
@@ -316,6 +316,9 @@ size_t IoContainer::GetIoSize(int idx)
 	case eS32:
 	case eU32:
 		size = 4;
+		break;
+	default:
+		size = 0;
 		break;
 	}
 	return size;

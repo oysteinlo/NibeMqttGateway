@@ -1,6 +1,7 @@
 #include "Arduino.h"
 #include "NibeMessage.h"
 #include "NibeHeater.h"
+#include "RemoteDebug.h"
 
 /*
 *	Frame format:
@@ -22,17 +23,17 @@
 *	and/or reduces the room temperature.
 */
 
-NibeMessage::NibeMessage()
+#define DEBUG_PRINT rdebugDln	// Telnet debug
+extern RemoteDebug Debug;
+
+NibeMessage::NibeMessage() : Printable()
 {
 }
 
-NibeMessage::NibeMessage(NibeHeater *pNibe)
+NibeMessage::NibeMessage(NibeHeater *pNibe, char *pName) : Printable()
 {
 	_pNibe = pNibe;
-}
-
-NibeMessage::~NibeMessage()
-{
+	strcpy(_name, pName);
 }
 
 void NibeMessage::AddByte(byte b)
@@ -42,13 +43,13 @@ void NibeMessage::AddByte(byte b)
 	if (_nByteIdx >= MAX_MSG_BUFFER)
 	{
 		_nByteIdx = MAX_MSG_BUFFER - 1;
-		printf("Rx buffer empty\n");
+		DEBUG_PRINT("Rx buffer empty");
 	}
 
 	if (_nByteIdx >= MAX_MSG_BUFFER)
 	{
 		_nByteIdx = MAX_MSG_BUFFER - 1;
-		printf("Overrun\n");
+		DEBUG_PRINT("Overrun");
 	}
 	_msg.buffer[_nByteIdx] = b;
 
@@ -85,6 +86,7 @@ void NibeMessage::AddByte(byte b)
 				}
 				else
 				{
+					Debug.println(*this);
 					_pNibe->HandleMessage(&_msg);
 				}
 				_bDataReady = true;
@@ -188,16 +190,17 @@ void NibeMessage::Send(Reply b)
 // 	}
 // }
 
-bool NibeMessage::SendMessage(Message *pMsg)
+bool NibeMessage::SendMessage()
 {
 	// Return with false if there is sender
 	if (pSendReply == nullptr)	return false;
 	
-	for (int i = 0; i <= pMsg->msg.length + 2; i++)
+	for (int i = 0; i <= _msg.msg.length + 2; i++)
 	{
-		pSendReply(pMsg->buffer[i + 2]);	// When transmitting the two start bytes 0x5x and 0x00 are omitted
+		pSendReply(_msg.buffer[i + 2]);	// When transmitting the two start bytes 0x5x and 0x00 are omitted
 	}
-	pSendReply(CheckSum(pMsg));	// Add checksum
+	pSendReply(CheckSum(&_msg));	// Add checksum
+	Debug.println(*this);
 
 	return true;
 }
@@ -210,4 +213,33 @@ bool NibeMessage::IsDataReady()
 Message* NibeMessage::GetMessage()
 {
 	return &_msg;
+}
+
+
+size_t NibeMessage::printTo(Print& p) const
+{
+	size_t n = 0;
+	n += p.print(_name);
+    for(int i = 0; i < _msg.msg.length + Data + 1; i++) {	// Control data + CRC
+        n += p.print(' ');
+        n += p.print(_msg.buffer[i], HEX);
+    }
+    return n;
+} 
+
+char* NibeMessage::LogMessage()
+{
+	int idx = 5; //"Data: "
+	sprintf (_printBuffer, "Data:");
+    for(int i = 0; i < _msg.msg.length + Data + 1; i++) {	// Control data + CRC
+   		if (idx + 4 < PRINT_BUF_SIZE) {
+			sprintf (_printBuffer + idx, " %02x", _msg.buffer[i]);
+			idx = idx + 3;
+    	}
+		else{
+			*(_printBuffer + idx + 1) = 0; // Nullterm
+		}
+	}
+	*(_printBuffer + idx + 1) = 0; // Nullterm
+    return _printBuffer;
 }
