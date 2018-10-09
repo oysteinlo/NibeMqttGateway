@@ -129,7 +129,6 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 		{
 			DEBUG_PRINT("READREQ");
 			_txMsgHandler->SendMessage();
-			
 		}
 		else
 		{
@@ -141,7 +140,6 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 		{
 			DEBUG_PRINT("WRITREQ");
 			_txMsgHandler->SendMessage();
-			
 		}
 		else
 		{
@@ -164,10 +162,12 @@ bool NibeHeater::ReadRequest(int idx, Message *pMsg)
 
 	if (pIo != nullptr && pMsg != nullptr)
 	{
+		DEBUG_PRINT("Reading %d-%d", idx,  pIo->nIdentifer);
+
 		//C0 69 02 66 B8
 		pMsg->msg.nodeid = 0xc0;
 		pMsg->msg.command = READREQ;
-		pMsg->msg.length = _ioContainer->GetIoSize(idx);
+		pMsg->msg.length = 2;//_ioContainer->GetIoSize(idx);
 		#ifdef WIN32
 		pMsg->msg.data[1] = pIo->nIdentifer & 0x00ff;
 		pMsg->msg.data[0] = pIo->nIdentifer >> 8;

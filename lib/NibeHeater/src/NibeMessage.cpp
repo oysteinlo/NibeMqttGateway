@@ -89,6 +89,7 @@ void NibeMessage::AddByte(byte b)
 			}
 			else
 			{
+				DEBUG_PRINT("Checksum error: %x", b);
 				Send(NACK);
 			}
 
@@ -166,6 +167,7 @@ void NibeMessage::Send(Reply b)
 {
 	if (pSendReply != nullptr)
 	{
+		DEBUG_PRINT("Tx %d", b);
 		pSendReply(b);
 	}
 }
