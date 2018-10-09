@@ -127,9 +127,9 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 	case READREQ:
 		if (ReadRequest(_ioContainer->GetExpiredIoElement(R), _txMsgHandler->GetMessage()))
 		{
-			_txMsgHandler->SendMessage();
 			DEBUG_PRINT("READREQ");
-			Debug.println(*_txMsgHandler);
+			_txMsgHandler->SendMessage();
+			
 		}
 		else
 		{
@@ -139,9 +139,9 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 	case WRITEREQ:
 		if (WriteRequest(_ioContainer->GetExpiredIoElement(W), _txMsgHandler->GetMessage()))
 		{
-			_txMsgHandler->SendMessage();
 			DEBUG_PRINT("WRITREQ");
-			Debug.println(*_txMsgHandler);
+			_txMsgHandler->SendMessage();
+			
 		}
 		else
 		{
@@ -157,11 +157,6 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 	return bOk;
 }
 
-// bool NibeHeater::Request()
-// {
-// 	return _msgHandler->SendMessage(&_reqMsg);
-// }
-
 bool NibeHeater::ReadRequest(int idx, Message *pMsg)
 {
 	bool bOk = false;
@@ -173,13 +168,13 @@ bool NibeHeater::ReadRequest(int idx, Message *pMsg)
 		pMsg->msg.nodeid = 0xc0;
 		pMsg->msg.command = READREQ;
 		pMsg->msg.length = _ioContainer->GetIoSize(idx);
-		//#ifdef WIN32
+		#ifdef WIN32
+		pMsg->msg.data[1] = pIo->nIdentifer & 0x00ff;
+		pMsg->msg.data[0] = pIo->nIdentifer >> 8;
+		#else
 		pMsg->msg.data[0] = pIo->nIdentifer & 0x00ff;
 		pMsg->msg.data[1] = pIo->nIdentifer >> 8;
-		// #else
-		// pMsg->msg.data[1] = pIo->nIdentifer & 0x00ff;
-		// pMsg->msg.data[0] = pIo->nIdentifer >> 8;
-		// #endif
+		#endif
 		bOk = true;
 	}
 	
@@ -200,11 +195,11 @@ bool NibeHeater::WriteRequest(int idx, Message *pMsg)
 		pMsg->msg.command = WRITEREQ;
 		pMsg->msg.length = 2 + dataSize;	// Adress (2) + data
 		#ifdef WIN32
-		pMsg->msg.data[0] = pIo->nIdentifer & 0x00ff;
-		pMsg->msg.data[1] = pIo->nIdentifer >> 8;
-		#else
 		pMsg->msg.data[1] = pIo->nIdentifer & 0x00ff;
 		pMsg->msg.data[0] = pIo->nIdentifer >> 8;
+		#else
+		pMsg->msg.data[0] = pIo->nIdentifer & 0x00ff;
+		pMsg->msg.data[1] = pIo->nIdentifer >> 8;
 		#endif		
 		memcpy(&pMsg->msg.data[2], &pIo->ioVal, dataSize);
 

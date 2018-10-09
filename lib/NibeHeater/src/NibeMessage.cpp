@@ -67,10 +67,6 @@ void NibeMessage::AddByte(byte b)
 			_bDataReady = false;
 			memset(_msg.msg.data, 0, MAX_DATA_LENGTH);
 		}
-		//if (b == ACK)
-		//{
-		//	_pNibe->Request();
-		//}
 		break;
 	case Length:
 		break;
@@ -166,14 +162,6 @@ unsigned long NibeMessage::idleTime()
 	return dt;
 }
 
-// void NibeMessage::SendAck()
-// {
-// 	if (pSendReply != nullptr)
-// 	{
-// 		pSendReply(ACK);
-// 	}
-// }
-
 void NibeMessage::Send(Reply b)
 {
 	if (pSendReply != nullptr)
@@ -182,14 +170,6 @@ void NibeMessage::Send(Reply b)
 	}
 }
 
-// void NibeMessage::SendNack()
-// {
-// 	if (pSendReply != nullptr)
-// 	{
-// 		pSendReply(NACK);
-// 	}
-// }
-
 bool NibeMessage::SendMessage()
 {
 	// Return with false if there is sender
@@ -197,7 +177,7 @@ bool NibeMessage::SendMessage()
 	
 	for (int i = 0; i <= _msg.msg.length + 2; i++)
 	{
-		pSendReply(_msg.buffer[i + 2]);	// When transmitting the two start bytes 0x5x and 0x00 are omitted
+		pSendReply(_msg.buffer[i + 2]);	// When transmitting the two start bytes 0x5c and 0x00 are omitted
 	}
 	pSendReply(CheckSum(&_msg));	// Add checksum
 	Debug.println(*this);
@@ -215,7 +195,6 @@ Message* NibeMessage::GetMessage()
 	return &_msg;
 }
 
-
 size_t NibeMessage::printTo(Print& p) const
 {
 	size_t n = 0;
@@ -227,6 +206,7 @@ size_t NibeMessage::printTo(Print& p) const
     return n;
 } 
 
+#ifdef REMOVE
 char* NibeMessage::LogMessage()
 {
 	int idx = 5; //"Data: "
@@ -243,3 +223,4 @@ char* NibeMessage::LogMessage()
 	*(_printBuffer + idx + 1) = 0; // Nullterm
     return _printBuffer;
 }
+#endif
