@@ -87,7 +87,9 @@ public:
 
 	size_t printTo(Print& p) const override;
 
+	#ifdef REMOVE
 	char* LogMessage();
+	#endif
 
 };
 

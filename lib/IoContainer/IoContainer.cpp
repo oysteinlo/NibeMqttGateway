@@ -1,5 +1,8 @@
 #include "IoContainer.h"
+#include "RemoteDebug.h"
 
+#define DEBUG_PRINT rdebugDln	// Telnet debug
+extern RemoteDebug Debug;
 
 IoContainer::IoContainer(const char *szName, IoElement_t *pIo, size_t size)
 {
@@ -80,10 +83,6 @@ bool IoContainer::Publish(int idx, bool bForce)
 						pIo->ulPublishTime = millis();
 						bOk = true;
 					}
-					if (!bForce)
-					{
-						pIo->bActive = true;
-					}
 				}
 			}
 		}
@@ -161,6 +160,7 @@ bool IoContainer::SetIoVal(int idx, IoVal io)
 	{
 		_pIo[idx].ioVal = io;
 		_pIo[idx].ulUpdateTime = millis();
+		_pIo[idx].bActive = true;
 		bFound = Publish(idx);
 	}
 	return bFound;
@@ -175,6 +175,12 @@ bool IoContainer::SetIoVal(int idx, char *pVal, size_t length)
 		memcpy(&_pIo[idx].ioVal, pVal, length);
 		_pIo[idx].ulUpdateTime = millis();
 		bFound = Publish(idx);
+
+		if (idx == 17)
+		{
+			DEBUG_PRINT("SetVal %d ", bFound ? 1:0);
+		}
+
 	}
 	return bFound;
 }
