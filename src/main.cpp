@@ -41,27 +41,27 @@ RemoteDebug Debug;
 
 IoElement_t iopoints[] =
 	{
-		/* Tag								        				Identifer,	Type	IoDir	Factor	Cyclic	Deadband*/
-		/*00*/ {"Alarm", 												45001, 		eS16, 	R, 		0, 		60000, 	0.0f},
-		/*01*/ {"AZ1-BT50 Room temp", 					41213, 		eS16, 	R, 		10, 	60000, 	0.5f},
-		/*02*/ {"BT1 Outdoor Temperature", 			40004, 		eS16, 	R, 		10, 	60000, 	0.5f},
-		/*03*/ {"Hot water temperature", 				40014, 		eS16, 	R, 		10, 	60000, 	0.5f},
-		/*04*/ {"Compressor starts EB100-EP14", 43416, 		eS32, 	R, 		0, 		60000, 	0.0f},
-		/*05*/ {"Compressor State EP14", 				43427, 		eU8, 		R, 		0, 		60000, 	0.0f},
-		/*06*/ {"DegreeMinute32", 							40940, 		eS32, 	R, 		10, 	60000, 	0.0f},
-		/*07*/ {"Brine in temperature", 				40015, 		eS16, 	R, 		10, 	60000, 	0.5f},
-		/*08*/ {"Brine out temperature", 				40016, 		eS16, 	R, 		10, 	60000, 	0.5f},
-		/*09*/ {"Condensor out temperature", 		40017, 		eS16, 	R, 		10, 	60000, 	0.5f},
-		/*10*/ {"Hot gas temperature", 					40018, 		eS16, 	R, 		10, 	60000, 	0.5f},
-		/*11*/ {"Suction temperature", 					40022, 		eS16, 	R, 		10, 	60000, 	0.5f},
-		/*12*/ {"Return temperature", 					40012,		eS16, 	R, 		10, 	60000, 	0.5f},
-		/*13*/ {"EB100-EP14 Prio", 							44243, 		eU8, 		R, 		0, 		60000,	0.0f},
-		/*14*/ {"Tot. HW op.time compr", 				43424, 		eS32, 	R, 		0, 		60000, 	0.0f},
-		/*15*/ {"Tot.op.time compr", 						43420, 		eS32, 	R, 		0, 		60000, 	0.0f},
-		/*16*/ {"Software version", 						43001, 		eU16, 	R, 		0, 		60000, 	0.0f},
-		/*17*/ {"Holiday activated", 						48043, 		eU8, 		R, 		0, 		60000, 	0.0f},
-		/*18*/ {"BT50 Room Temp S1", 						40033, 		eS16, 	R, 		10, 	60000,	0.5f},
-		/*19*/ {"BT50 Room Temp S1 Average", 		40195, 		eS16, 	R, 		10, 	60000,	0.5f},
+		/* Tag								        				Identifer		Type					Datatype	IoDir	Factor	Cyclic	Deadband*/
+		/*00*/ {"Alarm", 												45001, 		eNone,				eS16, 		R, 		0, 			60000, 	0.0f},
+		/*01*/ {"AZ1-BT50 Room temp", 					41213, 		eTemperature,	eS16, 		R, 		10, 		60000, 	0.5f},
+		/*02*/ {"BT1 Outdoor Temperature", 			40004, 		eTemperature,	eS16, 		R, 		10, 		60000, 	0.5f},
+		/*03*/ {"Hot water temperature", 				40014, 		eTemperature,	eS16, 		R, 		10, 		60000, 	0.5f},
+		/*04*/ {"Compressor starts EB100-EP14", 43416, 		eNone,				eS32, 		R, 		0, 			60000, 	0.0f},
+		/*05*/ {"Compressor State EP14", 				43427, 		eNone,				eU8, 			R, 		0, 			60000, 	0.0f},
+		/*06*/ {"DegreeMinute32", 							40940, 		eNone,				eS32, 		R, 		10, 		60000, 	0.0f},
+		/*07*/ {"Brine in temperature", 				40015, 		eTemperature,	eS16, 		R, 		10, 		60000, 	0.5f},
+		/*08*/ {"Brine out temperature", 				40016, 		eTemperature,	eS16, 		R, 		10, 		60000, 	0.5f},
+		/*09*/ {"Condensor out temperature", 		40017, 		eTemperature,	eS16, 		R, 		10, 		60000, 	0.5f},
+		/*10*/ {"Hot gas temperature", 					40018, 		eTemperature,	eS16, 		R, 		10, 		60000, 	0.5f},
+		/*11*/ {"Suction temperature", 					40022, 		eTemperature,	eS16, 		R, 		10, 		60000, 	0.5f},
+		/*12*/ {"Return temperature", 					40012,		eTemperature,	eS16, 		R, 		10, 		60000, 	0.5f},
+		/*13*/ {"EB100-EP14 Prio", 							44243, 		eNone,				eU8, 			R, 		0, 			60000,	0.0f},
+		/*14*/ {"Tot. HW op.time compr", 				43424, 		eNone,				eS32, 		R, 		0, 			60000, 	0.0f},
+		/*15*/ {"Tot.op.time compr", 						43420, 		eNone,				eS32, 		R, 		0, 			60000, 	0.0f},
+		/*16*/ {"Software version", 						43001, 		eNone,				eU16, 		R, 		0, 			60000, 	0.0f},
+		/*17*/ {"Holiday activated", 						48043, 		eNone,				eU8, 			R, 		0, 			60000, 	0.0f},
+		/*18*/ {"BT50 Room Temp S1", 						40033, 		eTemperature,	eS16, 		R, 		10, 		60000,	0.5f},
+		/*19*/ {"BT50 Room Temp S1 Average", 		40195, 		eTemperature,	eS16, 		R, 		10, 		60000,	0.5f},
 	};
 const byte numIoPoints = sizeof(iopoints) / sizeof(IoElement_t);
 IoContainer io("Nibe", iopoints, numIoPoints);

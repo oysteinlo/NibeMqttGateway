@@ -28,6 +28,11 @@ void IoContainer::init()
 	for (int i = 0; i < _size; i++)
 	{
 		_pIo[i].ulUpdateTime = millis();
+
+		if (_pIo[i].dataType == eText)
+		{
+			_pIo[i].ioVal.pSzVal = new char(TEXT_IO_MAX);
+		}
 	}
 }
 
@@ -71,9 +76,9 @@ bool IoContainer::Publish(int idx, bool bForce)
 					if (_pPub(topic, val))
 					{
 						// Special handling for text
-						if (pIo->type == eText)
+						if (pIo->dataType == eText)
 						{
-							strcpy(pIo->pubIoVal.szVal, pIo->ioVal.szVal);
+							strcpy(pIo->pubIoVal.pSzVal, pIo->ioVal.pSzVal);
 						}
 						// Otherwise we just copy the union IoVal
 						else
@@ -94,7 +99,7 @@ bool IoContainer::IsPublished(IoElement *pIo)
 {
 	bool bPublished = false;
 
-	switch (pIo->type)
+	switch (pIo->dataType)
 	{
 	case eBool:
 		bPublished = pIo->ioVal.bVal == pIo->pubIoVal.bVal;
@@ -120,7 +125,7 @@ bool IoContainer::IsPublished(IoElement *pIo)
 	case eFloat:
 		bPublished = fabs(pIo->ioVal.fVal - pIo->pubIoVal.fVal) < pIo->fPublishDeadband;
 		break;
-		bPublished = strcmp(pIo->ioVal.szVal, pIo->pubIoVal.szVal) == 0;
+		bPublished = strcmp(pIo->ioVal.pSzVal, pIo->pubIoVal.pSzVal) == 0;
 	default:
 		break;
 	}
@@ -172,17 +177,39 @@ bool IoContainer::SetIoVal(int idx, char *pVal, size_t length)
 
 	if (idx < _size && idx >= 0)
 	{
-		memcpy(&_pIo[idx].ioVal, pVal, length);
-		_pIo[idx].ulUpdateTime = millis();
-		bFound = Publish(idx);
-
-		if (idx == 17)
+		IoVal *pIo = (IoVal*)pVal;
+		
+		if (IsLegal(idx, pIo))
 		{
-			DEBUG_PRINT("SetVal %d ", bFound ? 1:0);
+			memcpy(&_pIo[idx].ioVal, pVal, length);
+			_pIo[idx].ulUpdateTime = millis();
+			_pIo[idx].bActive = true;
+			bFound = Publish(idx);
 		}
-
 	}
 	return bFound;
+}
+
+
+bool IoContainer::IsLegal(int idx, IoVal *pIo)
+{
+	bool bLegal = true;
+
+	switch (_pIo[idx].type)
+	{
+		case eTemperature:
+		if (pIo->i16Val < -50  || pIo->i16Val > 200)
+		{
+			bLegal = false;
+		}
+		
+		break;
+
+		default:
+		bLegal = true;
+		break;
+	}
+	return bLegal;
 }
 
 bool IoContainer::SetIoSzVal(int idx, char *pVal, size_t length)
@@ -214,7 +241,7 @@ bool IoContainer::SetIoSzVal(IoElement *pIoEl, char *pVal, size_t length)
 {
 	bool bOk = true;
 
-	switch (pIoEl->type)
+	switch (pIoEl->dataType)
 	{
 	case eBool:
 		pIoEl->ioVal.bVal = atoi((char*)pVal);
@@ -255,10 +282,10 @@ bool IoContainer::SetIoSzVal(IoElement *pIoEl, char *pVal, size_t length)
 		bOk = true;
 		break;
 	case eText:
-		if (sizeof(pIoEl->ioVal.szVal) > length)
+		if (sizeof(pIoEl->ioVal.pSzVal) > length)
 		{
 			//printf("%s -> %s\n", pIoEl->szTag, pIoEl->ioVal.szVal);
-			strcpy(pIoEl->ioVal.szVal, (char*)pVal);
+			strcpy(pIoEl->ioVal.pSzVal, (char*)pVal);
 			bOk = true;
 		}
 		break;
@@ -308,7 +335,7 @@ int IoContainer::GetIoIndex(unsigned int id)
 size_t IoContainer::GetIoSize(int idx)
 {
 	size_t size = 0;
-	switch (_pIo[idx].type)
+	switch (_pIo[idx].dataType)
 	{
 	case eBool:
 	case eS8:
@@ -356,7 +383,7 @@ bool IoContainer::GetSzValue(int idx, char *pszValue)
 {
 	bool bFound = true;
 
-	switch (_pIo[idx].type)
+	switch (_pIo[idx].dataType)
 	{
 	case eBool:
 		sprintf(pszValue, "%d", (_pIo[idx].ioVal.bVal));
