@@ -48,7 +48,7 @@ IoElement_t iopoints[] =
 		/*03*/ {"Hot water temperature", 				40014, 		eS16, 	R, 		10, 	60000, 	0.5f},
 		/*04*/ {"Compressor starts EB100-EP14", 43416, 		eS32, 	R, 		0, 		60000, 	0.0f},
 		/*05*/ {"Compressor State EP14", 				43427, 		eU8, 		R, 		0, 		60000, 	0.0f},
-		/*06*/ {"DegreeMinute32", 							40940, 		eS32, 	R, 		10, 	60000, 	0.0f},
+		/*06*/ {"DegreeMinute32", 						 	40940, 		eS32, 	R, 		10, 	60000, 	1.0f},
 		/*07*/ {"Brine in temperature", 				40015, 		eS16, 	R, 		10, 	60000, 	0.5f},
 		/*08*/ {"Brine out temperature", 				40016, 		eS16, 	R, 		10, 	60000, 	0.5f},
 		/*09*/ {"Condensor out temperature", 		40017, 		eS16, 	R, 		10, 	60000, 	0.5f},
@@ -59,9 +59,16 @@ IoElement_t iopoints[] =
 		/*14*/ {"Tot. HW op.time compr", 				43424, 		eS32, 	R, 		0, 		60000, 	0.0f},
 		/*15*/ {"Tot.op.time compr", 						43420, 		eS32, 	R, 		0, 		60000, 	0.0f},
 		/*16*/ {"Software version", 						43001, 		eU16, 	R, 		0, 		60000, 	0.0f},
-		/*17*/ {"Holiday activated", 						48043, 		eU8, 		R, 		0, 		60000, 	0.0f},
+		/*17*/ {"Holiday activated", 						48043, 		eU8, 		RW,		0, 		60000, 	0.0f},
 		/*18*/ {"BT50 Room Temp S1", 						40033, 		eS16, 	R, 		10, 	60000,	0.5f},
 		/*19*/ {"BT50 Room Temp S1 Average", 		40195, 		eS16, 	R, 		10, 	60000,	0.5f},
+		/*20*/ {"DegreeMinute", 							 	43005, 		eS16, 	R, 		10, 	60000, 	1.0f},
+		/*21*/ {"DM start heating", 					 	47206, 		eS16, 	R, 		0, 		60000, 	1.0f},
+		/*22*/ {"DM between add. steps", 			 	47209, 		eS16, 	R, 		0, 		60000, 	1.0f},
+		/*23*/ {"Heat Meter", 			 						40771, 		eU32, 	R, 		10, 	60000, 	1.0f},
+		/*24*/ {"Supply Pump State EP14", 			43431, 		eU8, 		R, 		 0, 	60000, 	0.0f},
+		/*25*/ {"Brine Pump State EP14", 			 	41433, 		eU8, 		R, 		 0, 	60000, 	0.0f},
+		/*26*/ {"Alarm reset", 			 						45171, 		eU8, 		RW,		 0, 	60000, 	0.0f},
 	};
 const byte numIoPoints = sizeof(iopoints) / sizeof(IoElement_t);
 IoContainer io("Nibe", iopoints, numIoPoints);
