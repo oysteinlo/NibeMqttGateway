@@ -5,8 +5,9 @@
 #define NAME_SIZE 32
 #define TOPIC_SIZE TAG_SIZE + NAME_SIZE + 2	// includes '/' and nullterm
 #define VALUE_SIZE	16 
+#define TEXT_IO_MAX 32
 
-typedef enum IoType
+typedef enum IoDataType
 {
 	eUnknown,
 	eBool,
@@ -18,6 +19,12 @@ typedef enum IoType
 	eU32,
 	eFloat,
 	eText,
+} IoDataType_t;
+
+typedef enum IoType 
+{
+	eNone,
+	eTemperature,
 } IoType_t;
 
 typedef enum IoDirection
@@ -30,7 +37,6 @@ typedef enum IoDirection
 typedef union IoVal
 {
 	bool bVal;
-	byte aVal[32];
 	int8_t i8Val;
 	int16_t i16Val;
 	int32_t i32Val;
@@ -38,14 +44,15 @@ typedef union IoVal
 	uint16_t u16Val;
 	uint32_t u32Val;
 	float fVal;
-	char szVal[32];
+	char *pSzVal;
 } IoVal_t;
 
 typedef struct IoElement
 {
 	char szTag[TAG_SIZE];
 	uint16_t nIdentifer;
-	IoType type;
+	IoType_t type;
+	IoDataType_t dataType;
 	IoDirection eIoDir;
 	int nfactor;
 	unsigned long ulPublishInterval;
@@ -70,6 +77,7 @@ private:
 	pPublish _pPub;		// Pointer to publish function
 
 	bool SetIoSzVal(IoElement * pIoEl, char * pVal, unsigned int length);
+	bool IsLegal(int idx, IoVal *pIo);
 
 
 public:
