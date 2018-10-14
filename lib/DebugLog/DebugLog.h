@@ -1,5 +1,10 @@
 #include "Printable.h"
-#include "RemoteDebug.h"
+
+#define DEBUG
+#ifdef DEBUG
+#define BUFFER_PRINT 300
+#include "RemoteDebug.h"        //https://github.com/JoaoLopesF/RemoteDebug
+
 
 #define rdebugApln(fmt) if (Debug.isActive(Debug.ANY)) 			Debug.println(fmt)
 #define rdebugpPln(fmt) if (Debug.isActive(Debug.PROFILER)) 	Debug.println(fmt)
@@ -8,6 +13,14 @@
 #define rdebugpIln(fmt) if (Debug.isActive(Debug.INFO)) 		Debug.println(fmt)
 #define rdebugpWln(fmt) if (Debug.isActive(Debug.WARNING)) 		Debug.println(fmt)
 #define rdebugpEln(fmt) if (Debug.isActive(Debug.ERROR)) 		Debug.println(fmt)
+
+#define DEBUG_PRINT rdebugDln	// Telnet debug
+
+extern RemoteDebug Debug;
+#else
+#define DEBUG_PRINT
+#define rdebugpDln
+#endif
 
 class DebugLog : public Printable
 {
@@ -18,7 +31,6 @@ public:
 	DebugLog(char szName[20]);
 	~DebugLog();
 
-	void WriteHexString(const byte *pByte, byte length);
 	virtual size_t printTo(Print& p) const = 0;
 };
 

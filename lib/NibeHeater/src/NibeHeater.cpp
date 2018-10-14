@@ -30,10 +30,7 @@
 */
 
 #include "NibeHeater.h"
-#include "RemoteDebug.h"
-
-#define DEBUG_PRINT rdebugDln	// Telnet debug
-extern RemoteDebug Debug;
+#include "DebugLog.h"
 
 NibeHeater::NibeHeater()
 {

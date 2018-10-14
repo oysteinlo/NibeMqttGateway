@@ -1,8 +1,5 @@
 #include "IoContainer.h"
-#include "RemoteDebug.h"
-
-#define DEBUG_PRINT rdebugDln	// Telnet debug
-extern RemoteDebug Debug;
+#include "DebugLog.h"
 
 IoContainer::IoContainer(const char *szName, IoElement_t *pIo, size_t size)
 {

@@ -4,9 +4,7 @@
 #include <AsyncMqttClient.h>
 #include "NibeHeater.h"
 #include "IoContainer.h"
-
-#define BUFFER_PRINT 300
-#include "RemoteDebug.h"        //https://github.com/JoaoLopesF/RemoteDebug
+#include "DebugLog.h"
 
 #define WIFI_SSID "WiFi2"
 #define WIFI_PASSWORD "lobbenwifi"
@@ -21,12 +19,7 @@
 #define MQTT_PORT 1883
 #endif
 
-#define DEBUG_PRINT rdebugDln	// Telnet debug
-//#define DEBUG_PRINT printf
-
 #define ENABLE_PIN 0 // GPIO_0 RS485 transceiver enablepinRS485 transceiver enablepin
-
-
 #define HOST_NAME "ESP debug" 
 
 
@@ -36,8 +29,6 @@ Ticker mqttReconnectTimer;
 WiFiEventHandler wifiConnectHandler;
 WiFiEventHandler wifiDisconnectHandler;
 Ticker wifiReconnectTimer;
-
-RemoteDebug Debug;
 
 IoElement_t iopoints[] =
 	{
@@ -91,7 +82,7 @@ bool SendReply(byte b)
 
 void DebugPrint(char text[])
 {
-  DEBUG_PRINT("%s", text);
+ 	rdebugpDln(text);
 }
 
 void subscribe()
@@ -198,13 +189,13 @@ void setup() {
   }
 #endif
 
- 
+ #ifdef DEBUG
   Debug.begin("DEBUG"); // Initiaze the telnet server
   Debug.setResetCmdEnabled(true); // Enable the reset command
   Debug.setCallBackProjectCmds(&processCmdRemoteDebug);
   //Debug.setSerialEnabled(true);
-	// DebugLog p("T");
-  // nibeHandler.AttachDebug(p);
+	#endif
+	
 	io.PublishFuncPtr(publish);
 	connectToWifi();
 
@@ -287,13 +278,16 @@ void loop() {
 	  nibeHandler.Loop();
 	  io.loop();
 
+#ifdef DEBUG
     Debug.handle();
+#endif
 
   	prevTime = millis();
 
     yield();
 }
 
+#ifdef DEBUG
 void processCmdRemoteDebug() {
 
 	String lastCmd = Debug.getLastCommand();
@@ -305,3 +299,4 @@ void processCmdRemoteDebug() {
 		}
   }
 }
+#endif
