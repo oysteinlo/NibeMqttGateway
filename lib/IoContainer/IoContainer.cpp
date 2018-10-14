@@ -175,12 +175,6 @@ bool IoContainer::SetIoVal(int idx, char *pVal, size_t length)
 		memcpy(&_pIo[idx].ioVal, pVal, length);
 		_pIo[idx].ulUpdateTime = millis();
 		bFound = Publish(idx);
-
-		if (idx == 17)
-		{
-			DEBUG_PRINT("SetVal %d ", bFound ? 1:0);
-		}
-
 	}
 	return bFound;
 }
