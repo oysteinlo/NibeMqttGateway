@@ -461,14 +461,26 @@ int IoContainer::GetExpiredIoElement(IoDirection eIoDir)
 
 	for (int i = 0; i < _size; i++)
 	{
-		if (_pIo[i].eIoDir == eIoDir)
+		switch (eIoDir)
 		{
-			if ((_pIo[i].ulPublishInterval > 0 && (millis() - _pIo[i].ulUpdateTime > _pIo[i].ulPublishInterval)) || _pIo[i].bTrig)
+			case R:
+			if ((_pIo[i].ulPublishInterval > 0 && (millis() - _pIo[i].ulUpdateTime > _pIo[i].ulPublishInterval)))
+			{
+				nRetval = i;
+				return nRetval;
+				break;
+			}
+			break;
+			case W:
+			case RW:
+			if (_pIo[i].bTrig)
 			{
 				nRetval = i;
 				_pIo[i].bTrig = false;	// TODO. Move reset of trig to NibeHeater
+				return nRetval;
 				break;
 			}
+			break;
 		}
 	}
 
