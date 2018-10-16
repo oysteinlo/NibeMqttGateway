@@ -133,9 +133,9 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 		}
 	break;
 	case WRITEREQ:
-		if (WriteRequest(_ioContainer->GetExpiredIoElement(W), _txMsgHandler->GetMessage()))
+		if (WriteRequest(_ioContainer->GetExpiredIoElement(RW), _txMsgHandler->GetMessage()))
 		{
-			DEBUG_PRINT("WRITREQ");
+			DEBUG_PRINT("WRITEREQ");
 			_txMsgHandler->SendMessage();
 		}
 		else

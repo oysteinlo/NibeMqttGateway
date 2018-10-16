@@ -196,6 +196,11 @@ bool IoContainer::SetIoSzVal(char *pTag, char *pVal, size_t length)
 	{
 		pVal[length] = '\0';
 		bUpdated = SetIoSzVal(pIoEl, pVal, length);
+
+		if (bUpdated)
+		{
+			pIoEl->bTrig = true;
+		}
 	}
 
 	return bUpdated;
@@ -209,46 +214,46 @@ bool IoContainer::SetIoSzVal(IoElement *pIoEl, char *pVal, size_t length)
 	{
 	case eBool:
 		pIoEl->ioVal.bVal = atoi((char*)pVal);
-		//printf("%s -> %d\n", pIoEl->szTag, pIoEl->ioVal.bVal);
+		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.bVal);
 		bOk = true;
 		break;
 	case eS8:
 		pIoEl->ioVal.i8Val = (int8_t)atoi((char*)pVal);
-		//printf("%s -> %d\n", pIoEl->szTag, pIoEl->ioVal.i8Val);
+		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.i8Val);
 		bOk = true;
 		break;
 	case eS16:
 		pIoEl->ioVal.i16Val = (int16_t)atoi((char*)pVal);
-		//printf("%s -> %d\n", pIoEl->szTag, pIoEl->ioVal.i16Val);
+		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.i16Val);
 		bOk = true;
 		break;
 	case eS32:
 		pIoEl->ioVal.i32Val = atoi((char*)pVal);
-		//printf("%s -> %d\n", pIoEl->szTag, pIoEl->ioVal.i32Val);
+		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.i32Val);
 		bOk = true;
 		break;
 	case eU8:
 		pIoEl->ioVal.u8Val = (uint8_t)atol((char*)pVal);
-		//printf("%s -> %d\n", pIoEl->szTag, pIoEl->ioVal.u8Val);
+		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.u8Val);
 		bOk = true;
 	case eU16:
 		pIoEl->ioVal.u16Val = (uint16_t)atol((char*)pVal);
-		//printf("%s -> %d\n", pIoEl->szTag, pIoEl->ioVal.u16Val);
+		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.u16Val);
 		bOk = true;
 	case eU32:
 		pIoEl->ioVal.u32Val = atol((char*)pVal);
-		//printf("%s -> %d\n", pIoEl->szTag, pIoEl->ioVal.u32Val);
+		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.u32Val);
 		bOk = true;
 		break;
 	case eFloat:
-		//printf("%s -> %f\n", pIoEl->szTag, pIoEl->ioVal.fVal);
+		rdebugDln("%s -> %f", pIoEl->szTag, pIoEl->ioVal.fVal);
 		pIoEl->ioVal.fVal = (float)atof((char*)pVal);
 		bOk = true;
 		break;
 	case eText:
 		if (sizeof(pIoEl->ioVal.szVal) > length)
 		{
-			//printf("%s -> %s\n", pIoEl->szTag, pIoEl->ioVal.szVal);
+			rdebugDln("%s -> %s", pIoEl->szTag, pIoEl->ioVal.szVal);
 			strcpy(pIoEl->ioVal.szVal, (char*)pVal);
 			bOk = true;
 		}
@@ -458,9 +463,10 @@ int IoContainer::GetExpiredIoElement(IoDirection eIoDir)
 	{
 		if (_pIo[i].eIoDir == eIoDir)
 		{
-			if (_pIo[i].ulPublishInterval > 0 && (millis() - _pIo[i].ulUpdateTime > _pIo[i].ulPublishInterval))
+			if ((_pIo[i].ulPublishInterval > 0 && (millis() - _pIo[i].ulUpdateTime > _pIo[i].ulPublishInterval)) || _pIo[i].bTrig)
 			{
 				nRetval = i;
+				_pIo[i].bTrig = false;	// TODO. Move reset of trig to NibeHeater
 				break;
 			}
 		}

@@ -55,6 +55,7 @@ typedef struct IoElement
 	IoVal pubIoVal;					// Last published 
 	unsigned long ulPublishTime;	
 	unsigned long ulUpdateTime;		// Sensor update time
+	bool bTrig;
 	bool bActive;
 } IoElement_t;
 

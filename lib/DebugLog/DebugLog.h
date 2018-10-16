@@ -1,7 +1,7 @@
 #include "Printable.h"
 
-#define DEBUG
-#ifdef DEBUG
+#define REMOTEDEBUG
+#ifdef REMOTEDEBUG
 #define BUFFER_PRINT 300
 #include "RemoteDebug.h"        //https://github.com/JoaoLopesF/RemoteDebug
 
