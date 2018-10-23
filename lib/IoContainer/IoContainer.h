@@ -5,6 +5,7 @@
 #define NAME_SIZE 32
 #define TOPIC_SIZE TAG_SIZE + NAME_SIZE + 2	// includes '/' and nullterm
 #define VALUE_SIZE	16 
+#define TEXT_IO_MAX 32
 
 typedef enum IoDataType
 {
@@ -36,7 +37,6 @@ typedef enum IoDirection
 typedef union IoVal
 {
 	bool bVal;
-	byte aVal[32];
 	int8_t i8Val;
 	int16_t i16Val;
 	int32_t i32Val;
@@ -44,7 +44,7 @@ typedef union IoVal
 	uint16_t u16Val;
 	uint32_t u32Val;
 	float fVal;
-	char szVal[32];
+	char *pSzVal;
 } IoVal_t;
 
 typedef struct IoElement
@@ -79,6 +79,7 @@ private:
 	
 
 	bool SetIoSzVal(IoElement * pIoEl, char * pVal, unsigned int length);
+	bool IsLegal(int idx, IoVal *pIo);
 
 
 public:
