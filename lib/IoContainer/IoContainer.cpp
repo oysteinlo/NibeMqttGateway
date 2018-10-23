@@ -70,7 +70,7 @@ bool IoContainer::Publish(int idx, bool bForce)
 						// Special handling for text
 						if (pIo->dataType == eText)
 						{
-							strcpy(pIo->pubIoVal.szVal, pIo->ioVal.szVal);
+							strcpy(pIo->pubIoVal.pSzVal, pIo->ioVal.pSzVal);
 						}
 						// Otherwise we just copy the union IoVal
 						else
@@ -117,7 +117,7 @@ bool IoContainer::IsPublished(IoElement *pIo)
 	case eFloat:
 		bPublished = fabs(pIo->ioVal.fVal - pIo->pubIoVal.fVal) < pIo->fPublishDeadband;
 		break;
-		bPublished = strcmp(pIo->ioVal.szVal, pIo->pubIoVal.szVal) == 0;
+		bPublished = strcmp(pIo->ioVal.pSzVal, pIo->pubIoVal.pSzVal) == 0;
 	default:
 		break;
 	}
@@ -262,10 +262,10 @@ bool IoContainer::SetIoSzVal(IoElement *pIoEl, char *pVal, size_t length)
 		bOk = true;
 		break;
 	case eText:
-		if (sizeof(pIoEl->ioVal.szVal) > length)
+		if (sizeof(pIoEl->ioVal.pSzVal) > length)
 		{
-			rdebugDln("%s -> %s", pIoEl->szTag, pIoEl->ioVal.szVal);
-			strcpy(pIoEl->ioVal.szVal, (char*)pVal);
+			rdebugDln("%s -> %s", pIoEl->szTag, pIoEl->ioVal.pSzVal);
+			strcpy(pIoEl->ioVal.pSzVal, (char*)pVal);
 			bOk = true;
 		}
 		break;
