@@ -68,7 +68,7 @@ bool IoContainer::Publish(int idx, bool bForce)
 					if (_pPub(topic, val))
 					{
 						// Special handling for text
-						if (pIo->type == eText)
+						if (pIo->dataType == eText)
 						{
 							strcpy(pIo->pubIoVal.szVal, pIo->ioVal.szVal);
 						}
@@ -91,7 +91,7 @@ bool IoContainer::IsPublished(IoElement *pIo)
 {
 	bool bPublished = false;
 
-	switch (pIo->type)
+	switch (pIo->dataType)
 	{
 	case eBool:
 		bPublished = pIo->ioVal.bVal == pIo->pubIoVal.bVal;
@@ -153,6 +153,16 @@ bool IoContainer::SetIoVal(int idx, IoVal io)
 {
 	bool bFound = false;
 
+	// Check for error status
+	if(_pIo[idx].type == eAnalog)
+	{
+		if (_errorVal > 0 && io.i16Val == _errorVal)
+		{
+			rdebugWln("Error value %s", _pIo[idx].szTag);
+			return false;
+		}
+	}
+
 	if (idx < _size && idx >= 0)
 	{
 		_pIo[idx].ioVal = io;
@@ -165,15 +175,16 @@ bool IoContainer::SetIoVal(int idx, IoVal io)
 
 bool IoContainer::SetIoVal(int idx, char *pVal, size_t length)
 {
-	bool bFound = false;
+	IoVal io;
 
-	if (idx < _size && idx >= 0)
-	{
-		memcpy(&_pIo[idx].ioVal, pVal, length);
-		_pIo[idx].ulUpdateTime = millis();
-		bFound = Publish(idx);
-	}
-	return bFound;
+	memcpy(&io, pVal, length);
+	
+	return SetIoVal(idx, io);
+}
+
+void IoContainer::SetErrorVal(uint val)
+{
+	_errorVal = val;
 }
 
 bool IoContainer::SetIoSzVal(int idx, char *pVal, size_t length)
@@ -210,7 +221,7 @@ bool IoContainer::SetIoSzVal(IoElement *pIoEl, char *pVal, size_t length)
 {
 	bool bOk = true;
 
-	switch (pIoEl->type)
+	switch (pIoEl->dataType)
 	{
 	case eBool:
 		pIoEl->ioVal.bVal = atoi((char*)pVal);
@@ -304,7 +315,7 @@ int IoContainer::GetIoIndex(unsigned int id)
 size_t IoContainer::GetIoSize(int idx)
 {
 	size_t size = 0;
-	switch (_pIo[idx].type)
+	switch (_pIo[idx].dataType)
 	{
 	case eBool:
 	case eS8:
@@ -352,28 +363,19 @@ bool IoContainer::GetSzValue(int idx, char *pszValue)
 {
 	bool bFound = true;
 
-	switch (_pIo[idx].type)
+	switch (_pIo[idx].dataType)
 	{
 	case eBool:
 		sprintf(pszValue, "%d", (_pIo[idx].ioVal.bVal));
 		break;
 	case eS8:
-		if (_pIo[idx].nfactor > 0)
-		{
-			int val1 = _pIo[idx].ioVal.i8Val / _pIo[idx].nfactor;
-			int val2 = abs(_pIo[idx].ioVal.i8Val % _pIo[idx].nfactor);
-			sprintf(pszValue, "%d.%d", val1, val2);
-		}
-		else
-		{
-			sprintf(pszValue, "%d", _pIo[idx].ioVal.i8Val);
-		}
+		sprintf(pszValue, "%d", _pIo[idx].ioVal.i8Val);
 		break;
 	case eS16:
-		if (_pIo[idx].nfactor > 0)
+		if (_pIo[idx].type == eAnalog)
 		{
-			int val1 = _pIo[idx].ioVal.i16Val / _pIo[idx].nfactor;
-			int val2 = abs(_pIo[idx].ioVal.i16Val % _pIo[idx].nfactor);
+			int val1 = _pIo[idx].ioVal.i16Val / 10;
+			int val2 = abs(_pIo[idx].ioVal.i16Val % 10);
 			sprintf(pszValue, "%d.%d", val1, val2);
 		}
 		else
@@ -382,10 +384,10 @@ bool IoContainer::GetSzValue(int idx, char *pszValue)
 		}
 		break;
 	case eS32:
-		if (_pIo[idx].nfactor > 0)
+		if (_pIo[idx].type == eAnalog)
 		{
-			int val1 = _pIo[idx].ioVal.i32Val / _pIo[idx].nfactor;
-			int val2 = abs(_pIo[idx].ioVal.i32Val % _pIo[idx].nfactor);
+			int val1 = _pIo[idx].ioVal.i32Val / 10;
+			int val2 = abs(_pIo[idx].ioVal.i32Val % 10);
 			sprintf(pszValue, "%d.%d", val1, val2);
 		}
 		else
@@ -394,22 +396,13 @@ bool IoContainer::GetSzValue(int idx, char *pszValue)
 		}
 		break;
 	case eU8:
-		if (_pIo[idx].nfactor > 0)
-		{
-			int val1 = _pIo[idx].ioVal.u8Val / _pIo[idx].nfactor;
-			int val2 = _pIo[idx].ioVal.u8Val % _pIo[idx].nfactor;
-			sprintf(pszValue, "%d.%d", val1, val2);
-		}
-		else
-		{
-			sprintf(pszValue, "%d", _pIo[idx].ioVal.u8Val);
-		}
+		sprintf(pszValue, "%d", _pIo[idx].ioVal.u8Val);
 		break;
 	case eU16:
-		if (_pIo[idx].nfactor > 0)
+		if (_pIo[idx].type == eAnalog)
 		{
-			int val1 = _pIo[idx].ioVal.u16Val / _pIo[idx].nfactor;
-			int val2 = _pIo[idx].ioVal.u16Val % _pIo[idx].nfactor;
+			int val1 = _pIo[idx].ioVal.i32Val / 10;
+			int val2 = abs(_pIo[idx].ioVal.i32Val % 10);
 			sprintf(pszValue, "%d.%d", val1, val2);
 		}
 		else
@@ -418,10 +411,10 @@ bool IoContainer::GetSzValue(int idx, char *pszValue)
 		}
 		break;
 	case eU32:
-		if (_pIo[idx].nfactor > 0)
+		if (_pIo[idx].type == eAnalog)
 		{
-			int val1 = _pIo[idx].ioVal.u32Val / _pIo[idx].nfactor;
-			int val2 = _pIo[idx].ioVal.u32Val % _pIo[idx].nfactor;
+			int val1 = _pIo[idx].ioVal.i32Val / 10;
+			int val2 = abs(_pIo[idx].ioVal.i32Val % 10);
 			sprintf(pszValue, "%d.%d", val1, val2);
 		}
 		else

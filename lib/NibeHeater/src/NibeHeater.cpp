@@ -47,6 +47,8 @@ NibeHeater::NibeHeater(NibeMessage **ppMsg)
 NibeHeater::NibeHeater(NibeMessage **ppMsg, IoContainer *pIoContainer)
 {
 	_ioContainer = pIoContainer;
+	_ioContainer->SetErrorVal(0x5c5c);	// Analog int16 messages with value 0x5c5c are wrong, seems to be an error status
+
 	_rxMsgHandler = *ppMsg = new NibeMessage(this, "Rx");
 	_txMsgHandler = new NibeMessage(this, "Tx");
 }
@@ -116,6 +118,16 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 					data[2] = *(pMsg->msg.data + i + 2);
 					data[3] = *(pMsg->msg.data + i + 3);
 				}
+			}
+
+			if (size == 2)
+			{
+				if (data[0] == 0x5c && data[1] == 0x5c)
+				{
+					DEBUG_PRINT("Error value: %d", idx);
+					data[0] = 0;
+					data[1] = 0;
+				}	
 			}
 			_ioContainer->SetIoVal(idx, data, size);
 		}
