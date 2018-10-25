@@ -30,10 +30,7 @@
 */
 
 #include "NibeHeater.h"
-#include "RemoteDebug.h"
-
-#define DEBUG_PRINT rdebugDln	// Telnet debug
-extern RemoteDebug Debug;
+#include "DebugLog.h"
 
 NibeHeater::NibeHeater()
 {
@@ -50,6 +47,8 @@ NibeHeater::NibeHeater(NibeMessage **ppMsg)
 NibeHeater::NibeHeater(NibeMessage **ppMsg, IoContainer *pIoContainer)
 {
 	_ioContainer = pIoContainer;
+	_ioContainer->SetErrorVal(0x5c5c);	// Analog int16 messages with value 0x5c5c are wrong, seems to be an error status
+
 	_rxMsgHandler = *ppMsg = new NibeMessage(this, "Rx");
 	_txMsgHandler = new NibeMessage(this, "Tx");
 }
@@ -120,6 +119,16 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 					data[3] = *(pMsg->msg.data + i + 3);
 				}
 			}
+
+			if (size == 2)
+			{
+				if (data[0] == 0x5c && data[1] == 0x5c)
+				{
+					DEBUG_PRINT("Error value: %d", idx);
+					data[0] = 0;
+					data[1] = 0;
+				}	
+			}
 			_ioContainer->SetIoVal(idx, data, size);
 		}
 	}
@@ -136,9 +145,9 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 		}
 	break;
 	case WRITEREQ:
-		if (WriteRequest(_ioContainer->GetExpiredIoElement(W), _txMsgHandler->GetMessage()))
+		if (WriteRequest(_ioContainer->GetExpiredIoElement(RW), _txMsgHandler->GetMessage()))
 		{
-			DEBUG_PRINT("WRITREQ");
+			DEBUG_PRINT("WRITEREQ");
 			_txMsgHandler->SendMessage();
 		}
 		else

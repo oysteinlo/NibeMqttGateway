@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include "NibeMessage.h"
 #include "NibeHeater.h"
-#include "RemoteDebug.h"
+#include "DebugLog.h"
 
 /*
 *	Frame format:
@@ -23,8 +23,6 @@
 *	and/or reduces the room temperature.
 */
 
-#define DEBUG_PRINT rdebugDln	// Telnet debug
-extern RemoteDebug Debug;
 
 NibeMessage::NibeMessage() : Printable()
 {
@@ -82,7 +80,7 @@ void NibeMessage::AddByte(byte b)
 				}
 				else
 				{
-					Debug.println(*this);
+					rdebugpDln(*this);
 					_pNibe->HandleMessage(&_msg);
 				}
 				_bDataReady = true;
@@ -182,7 +180,7 @@ bool NibeMessage::SendMessage()
 		pSendReply(_msg.buffer[i + 2]);	// When transmitting the two start bytes 0x5c and 0x00 are omitted
 	}
 	pSendReply(CheckSum(&_msg));	// Add checksum
-	Debug.println(*this);
+	rdebugpDln(*this);
 
 	return true;
 }

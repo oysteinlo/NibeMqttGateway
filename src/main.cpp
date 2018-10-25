@@ -4,9 +4,7 @@
 #include <AsyncMqttClient.h>
 #include "NibeHeater.h"
 #include "IoContainer.h"
-
-#define BUFFER_PRINT 300
-#include "RemoteDebug.h"        //https://github.com/JoaoLopesF/RemoteDebug
+#include "DebugLog.h"
 
 #define WIFI_SSID "WiFi2"
 #define WIFI_PASSWORD "lobbenwifi"
@@ -21,12 +19,7 @@
 #define MQTT_PORT 1883
 #endif
 
-#define DEBUG_PRINT rdebugDln	// Telnet debug
-//#define DEBUG_PRINT printf
-
 #define ENABLE_PIN 0 // GPIO_0 RS485 transceiver enablepinRS485 transceiver enablepin
-
-
 #define HOST_NAME "ESP debug" 
 
 
@@ -37,38 +30,49 @@ WiFiEventHandler wifiConnectHandler;
 WiFiEventHandler wifiDisconnectHandler;
 Ticker wifiReconnectTimer;
 
-RemoteDebug Debug;
-
 IoElement_t iopoints[] =
 	{
-		/* Tag								        				Identifer,	Type	IoDir	Factor	Cyclic	Deadband*/
-		/*00*/ {"Alarm", 												45001, 		eS16, 	R, 		0, 		60000, 	0.0f},
-		/*01*/ {"AZ1-BT50 Room temp", 					41213, 		eS16, 	R, 		10, 	60000, 	0.5f},
-		/*02*/ {"BT1 Outdoor Temperature", 			40004, 		eS16, 	R, 		10, 	60000, 	0.5f},
-		/*03*/ {"Hot water temperature", 				40014, 		eS16, 	R, 		10, 	60000, 	0.5f},
-		/*04*/ {"Compressor starts EB100-EP14", 43416, 		eS32, 	R, 		0, 		60000, 	0.0f},
-		/*05*/ {"Compressor State EP14", 				43427, 		eU8, 		R, 		0, 		60000, 	0.0f},
-		/*06*/ {"DegreeMinute32", 						 	40940, 		eS32, 	R, 		10, 	60000, 	1.0f},
-		/*07*/ {"Brine in temperature", 				40015, 		eS16, 	R, 		10, 	60000, 	0.5f},
-		/*08*/ {"Brine out temperature", 				40016, 		eS16, 	R, 		10, 	60000, 	0.5f},
-		/*09*/ {"Condensor out temperature", 		40017, 		eS16, 	R, 		10, 	60000, 	0.5f},
-		/*10*/ {"Hot gas temperature", 					40018, 		eS16, 	R, 		10, 	60000, 	0.5f},
-		/*11*/ {"Suction temperature", 					40022, 		eS16, 	R, 		10, 	60000, 	0.5f},
-		/*12*/ {"Return temperature", 					40012,		eS16, 	R, 		10, 	60000, 	0.5f},
-		/*13*/ {"EB100-EP14 Prio", 							44243, 		eU8, 		R, 		0, 		60000,	0.0f},
-		/*14*/ {"Tot. HW op.time compr", 				43424, 		eS32, 	R, 		0, 		60000, 	0.0f},
-		/*15*/ {"Tot.op.time compr", 						43420, 		eS32, 	R, 		0, 		60000, 	0.0f},
-		/*16*/ {"Software version", 						43001, 		eU16, 	R, 		0, 		60000, 	0.0f},
-		/*17*/ {"Holiday activated", 						48043, 		eU8, 		RW,		0, 		60000, 	0.0f},
-		/*18*/ {"BT50 Room Temp S1", 						40033, 		eS16, 	R, 		10, 	60000,	0.5f},
-		/*19*/ {"BT50 Room Temp S1 Average", 		40195, 		eS16, 	R, 		10, 	60000,	0.5f},
-		/*20*/ {"DegreeMinute", 							 	43005, 		eS16, 	R, 		10, 	60000, 	1.0f},
-		/*21*/ {"DM start heating", 					 	47206, 		eS16, 	R, 		0, 		60000, 	1.0f},
-		/*22*/ {"DM between add. steps", 			 	47209, 		eS16, 	R, 		0, 		60000, 	1.0f},
-		/*23*/ {"Heat Meter", 			 						40771, 		eU32, 	R, 		10, 	60000, 	1.0f},
-		/*24*/ {"Supply Pump State EP14", 			43431, 		eU8, 		R, 		 0, 	60000, 	0.0f},
-		/*25*/ {"Brine Pump State EP14", 			 	41433, 		eU8, 		R, 		 0, 	60000, 	0.0f},
-		/*26*/ {"Alarm reset", 			 						45171, 		eU8, 		RW,		 0, 	60000, 	0.0f},
+							/* Tag			        				Identifer,	DaType	IoDir	Type			Cyclic	Deadband*/
+		/*00*/ {"BT1 Outdoor Temperature", 			40004, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*01*/ {"Return temperature", 					40012,		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*02*/ {"Hot water temperature top",		40013, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*03*/ {"Hot water temperature load",		40014, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*04*/ {"Brine in temperature", 				40015, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*05*/ {"Brine out temperature", 				40016, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*06*/ {"Condensor out temperature", 		40017, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*07*/ {"Hot gas temperature", 					40018, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*08*/ {"Liquid line temperature", 			40019, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*09*/ {"Suction temperature", 					40022, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*10*/ {"BT50 Room Temp S1", 						40033, 		eS16, 	R, 		eAnalog, 	60000,	0.5f},
+		/*11*/ {"Outdoor temperature avg",			40067, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*12*/ {"Current flow",									40072, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*13*/ {"DegreeMinute32", 						 	40940, 		eS32, 	RW, 	eAnalog, 	60000, 	1.0f},
+		/*14*/ {"BT50 Room Temp S1 Average", 		40195, 		eS16, 	R, 		eAnalog, 	60000,	0.5f},
+		/*15*/ {"Total external hw-electric",		40755, 		eS32, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*16*/ {"Heat Meter", 			 						40771, 		eU32, 	R, 		eAnalog, 	60000, 	1.0f},
+		/*17*/ {"Adjust Temp indoor",						40874, 		eS16, 	R,		eAnalog, 	60000, 	0.5f},
+		/*18*/ {"Adjust Temp outdoor",					40875, 		eS16, 	R,		eAnalog, 	60000, 	0.5f},
+		/*19*/ {"AZ1-BT50 Room temp", 					41213, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*20*/ {"Smart Home Mode", 							41265, 		eU8, 		RW,		eDefault,	60000, 	0.0f},
+		/*21*/ {"Brine Pump State EP14", 			 	41433, 		eU8, 		R, 		eDefault,	60000, 	0.0f},
+		/*22*/ {"Software version", 						43001, 		eU16, 	R, 		eDefault,	60000, 	0.0f},
+		/*23*/ {"DegreeMinute", 							 	43005, 		eS16, 	RW,		eAnalog, 	60000, 	1.0f},
+		/*24*/ {"Compressor starts EB100-EP14", 43416, 		eS32, 	R, 		eDefault, 60000, 	0.0f},
+		/*25*/ {"Tot.op.time compr", 						43420, 		eS32, 	R, 		eDefault,	60000, 	0.0f},
+		/*26*/ {"Tot. HW op.time compr", 				43424, 		eS32, 	R, 		eDefault,	60000, 	0.0f},
+		/*27*/ {"Compressor State EP14", 				43427, 		eU8, 		R, 		eDefault, 60000, 	0.0f},
+		/*28*/ {"Supply Pump State EP14", 			43431, 		eU8, 		R, 		eDefault,	60000, 	0.0f},
+		/*29*/ {"EB100-EP14 Prio", 							44243, 		eU8, 		R, 		eDefault,	60000,	0.0f},
+		/*30*/ {"Alarm", 												45001, 		eS16, 	R, 		eDefault, 60000, 	0.0f},
+		/*31*/ {"Alarm reset", 			 						45171, 		eU8, 		RW,		eDefault,	60000, 	0.0f},
+		/*32*/ {"Hot water mode",							 	47041, 		eS8, 		RW,		eDefault,	60000, 	1.0f},
+		/*33*/ {"Periodic hotwater",					 	47050, 		eS8, 		RW,		eDefault,	60000, 	1.0f},
+		/*34*/ {"Operational mode",					 		47137, 		eS8, 		RW,		eDefault,	60000, 	1.0f},
+		/*35*/ {"Operational mode heat",			 	47138, 		eS8, 		RW,		eDefault,	60000, 	1.0f},
+		/*36*/ {"Operational mode brine",			 	47139, 		eS8, 		RW,		eDefault,	60000, 	1.0f},
+		/*37*/ {"DM start heating", 					 	47206, 		eS16, 	RW,		eDefault,	60000, 	1.0f},
+		/*38*/ {"DM between add. steps", 			 	47209, 		eS16, 	RW,		eDefault,	60000, 	1.0f},
+		/*39*/ {"Holiday activated", 						48043, 		eU8, 		RW,		eDefault,	60000, 	0.0f},
 	};
 const byte numIoPoints = sizeof(iopoints) / sizeof(IoElement_t);
 IoContainer io("Nibe", iopoints, numIoPoints);
@@ -91,7 +95,7 @@ bool SendReply(byte b)
 
 void DebugPrint(char text[])
 {
-  DEBUG_PRINT("%s", text);
+ 	rdebugpDln(text);
 }
 
 void subscribe()
@@ -198,13 +202,13 @@ void setup() {
   }
 #endif
 
- 
+ #ifdef DEBUG
   Debug.begin("DEBUG"); // Initiaze the telnet server
   Debug.setResetCmdEnabled(true); // Enable the reset command
   Debug.setCallBackProjectCmds(&processCmdRemoteDebug);
   //Debug.setSerialEnabled(true);
-	// DebugLog p("T");
-  // nibeHandler.AttachDebug(p);
+	#endif
+	
 	io.PublishFuncPtr(publish);
 	connectToWifi();
 
@@ -287,13 +291,16 @@ void loop() {
 	  nibeHandler.Loop();
 	  io.loop();
 
+#ifdef DEBUG
     Debug.handle();
+#endif
 
   	prevTime = millis();
 
     yield();
 }
 
+#ifdef DEBUG
 void processCmdRemoteDebug() {
 
 	String lastCmd = Debug.getLastCommand();
@@ -305,3 +312,4 @@ void processCmdRemoteDebug() {
 		}
   }
 }
+#endif

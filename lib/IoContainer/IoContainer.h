@@ -21,10 +21,10 @@ typedef enum IoDataType
 	eText,
 } IoDataType_t;
 
-typedef enum IoType 
+typedef enum IoType
 {
-	eNone,
-	eTemperature,
+	eDefault,
+	eAnalog,
 } IoType_t;
 
 typedef enum IoDirection
@@ -51,10 +51,9 @@ typedef struct IoElement
 {
 	char szTag[TAG_SIZE];
 	uint16_t nIdentifer;
-	IoType_t type;
-	IoDataType_t dataType;
+	IoDataType dataType;
 	IoDirection eIoDir;
-	int nfactor;
+	IoType type;
 	unsigned long ulPublishInterval;
 	float fPublishDeadband;
 
@@ -62,6 +61,7 @@ typedef struct IoElement
 	IoVal pubIoVal;					// Last published 
 	unsigned long ulPublishTime;	
 	unsigned long ulUpdateTime;		// Sensor update time
+	bool bTrig;
 	bool bActive;
 } IoElement_t;
 
@@ -72,9 +72,11 @@ class IoContainer
 private:
 	IoElement_t *_pIo;
 	int _size;
+	uint _errorVal;
 	char _szName[16];
 	char _szTag[32];
 	pPublish _pPub;		// Pointer to publish function
+	
 
 	bool SetIoSzVal(IoElement * pIoEl, char * pVal, unsigned int length);
 	bool IsLegal(int idx, IoVal *pIo);
@@ -98,6 +100,7 @@ public:
 	bool SetIoVal(int idx, char * pVal, size_t length);
 	bool SetIoSzVal(int idx, char * pVal, size_t length);
 	bool SetIoSzVal(char *pTag, char *pVal, size_t length);
+	void SetErrorVal(uint val);
 	
 	int GetExpiredIoElement(IoDirection eIoDir);
 	IoElement* GetIoElement(char *pTag);

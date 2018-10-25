@@ -1,8 +1,5 @@
 #include "IoContainer.h"
-#include "RemoteDebug.h"
-
-#define DEBUG_PRINT rdebugDln	// Telnet debug
-extern RemoteDebug Debug;
+#include "DebugLog.h"
 
 IoContainer::IoContainer(const char *szName, IoElement_t *pIo, size_t size)
 {
@@ -28,11 +25,6 @@ void IoContainer::init()
 	for (int i = 0; i < _size; i++)
 	{
 		_pIo[i].ulUpdateTime = millis();
-
-		if (_pIo[i].dataType == eText)
-		{
-			_pIo[i].ioVal.pSzVal = new char(TEXT_IO_MAX);
-		}
 	}
 }
 
@@ -161,6 +153,16 @@ bool IoContainer::SetIoVal(int idx, IoVal io)
 {
 	bool bFound = false;
 
+	// Check for error status
+	if(_pIo[idx].type == eAnalog)
+	{
+		if (_errorVal > 0 && io.i16Val == _errorVal)
+		{
+			rdebugWln("Error value %s", _pIo[idx].szTag);
+			return false;
+		}
+	}
+
 	if (idx < _size && idx >= 0)
 	{
 		_pIo[idx].ioVal = io;
@@ -173,43 +175,16 @@ bool IoContainer::SetIoVal(int idx, IoVal io)
 
 bool IoContainer::SetIoVal(int idx, char *pVal, size_t length)
 {
-	bool bFound = false;
+	IoVal io;
 
-	if (idx < _size && idx >= 0)
-	{
-		IoVal *pIo = (IoVal*)pVal;
-		
-		if (IsLegal(idx, pIo))
-		{
-			memcpy(&_pIo[idx].ioVal, pVal, length);
-			_pIo[idx].ulUpdateTime = millis();
-			_pIo[idx].bActive = true;
-			bFound = Publish(idx);
-		}
-	}
-	return bFound;
+	memcpy(&io, pVal, length);
+	
+	return SetIoVal(idx, io);
 }
 
-
-bool IoContainer::IsLegal(int idx, IoVal *pIo)
+void IoContainer::SetErrorVal(uint val)
 {
-	bool bLegal = true;
-
-	switch (_pIo[idx].type)
-	{
-		case eTemperature:
-		if (pIo->i16Val < -50  || pIo->i16Val > 200)
-		{
-			bLegal = false;
-		}
-		
-		break;
-
-		default:
-		bLegal = true;
-		break;
-	}
-	return bLegal;
+	_errorVal = val;
 }
 
 bool IoContainer::SetIoSzVal(int idx, char *pVal, size_t length)
@@ -232,6 +207,11 @@ bool IoContainer::SetIoSzVal(char *pTag, char *pVal, size_t length)
 	{
 		pVal[length] = '\0';
 		bUpdated = SetIoSzVal(pIoEl, pVal, length);
+
+		if (bUpdated)
+		{
+			pIoEl->bTrig = true;
+		}
 	}
 
 	return bUpdated;
@@ -245,46 +225,46 @@ bool IoContainer::SetIoSzVal(IoElement *pIoEl, char *pVal, size_t length)
 	{
 	case eBool:
 		pIoEl->ioVal.bVal = atoi((char*)pVal);
-		//printf("%s -> %d\n", pIoEl->szTag, pIoEl->ioVal.bVal);
+		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.bVal);
 		bOk = true;
 		break;
 	case eS8:
 		pIoEl->ioVal.i8Val = (int8_t)atoi((char*)pVal);
-		//printf("%s -> %d\n", pIoEl->szTag, pIoEl->ioVal.i8Val);
+		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.i8Val);
 		bOk = true;
 		break;
 	case eS16:
 		pIoEl->ioVal.i16Val = (int16_t)atoi((char*)pVal);
-		//printf("%s -> %d\n", pIoEl->szTag, pIoEl->ioVal.i16Val);
+		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.i16Val);
 		bOk = true;
 		break;
 	case eS32:
 		pIoEl->ioVal.i32Val = atoi((char*)pVal);
-		//printf("%s -> %d\n", pIoEl->szTag, pIoEl->ioVal.i32Val);
+		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.i32Val);
 		bOk = true;
 		break;
 	case eU8:
 		pIoEl->ioVal.u8Val = (uint8_t)atol((char*)pVal);
-		//printf("%s -> %d\n", pIoEl->szTag, pIoEl->ioVal.u8Val);
+		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.u8Val);
 		bOk = true;
 	case eU16:
 		pIoEl->ioVal.u16Val = (uint16_t)atol((char*)pVal);
-		//printf("%s -> %d\n", pIoEl->szTag, pIoEl->ioVal.u16Val);
+		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.u16Val);
 		bOk = true;
 	case eU32:
 		pIoEl->ioVal.u32Val = atol((char*)pVal);
-		//printf("%s -> %d\n", pIoEl->szTag, pIoEl->ioVal.u32Val);
+		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.u32Val);
 		bOk = true;
 		break;
 	case eFloat:
-		//printf("%s -> %f\n", pIoEl->szTag, pIoEl->ioVal.fVal);
+		rdebugDln("%s -> %f", pIoEl->szTag, pIoEl->ioVal.fVal);
 		pIoEl->ioVal.fVal = (float)atof((char*)pVal);
 		bOk = true;
 		break;
 	case eText:
 		if (sizeof(pIoEl->ioVal.pSzVal) > length)
 		{
-			//printf("%s -> %s\n", pIoEl->szTag, pIoEl->ioVal.szVal);
+			rdebugDln("%s -> %s", pIoEl->szTag, pIoEl->ioVal.pSzVal);
 			strcpy(pIoEl->ioVal.pSzVal, (char*)pVal);
 			bOk = true;
 		}
@@ -389,22 +369,13 @@ bool IoContainer::GetSzValue(int idx, char *pszValue)
 		sprintf(pszValue, "%d", (_pIo[idx].ioVal.bVal));
 		break;
 	case eS8:
-		if (_pIo[idx].nfactor > 0)
-		{
-			int val1 = _pIo[idx].ioVal.i8Val / _pIo[idx].nfactor;
-			int val2 = abs(_pIo[idx].ioVal.i8Val % _pIo[idx].nfactor);
-			sprintf(pszValue, "%d.%d", val1, val2);
-		}
-		else
-		{
-			sprintf(pszValue, "%d", _pIo[idx].ioVal.i8Val);
-		}
+		sprintf(pszValue, "%d", _pIo[idx].ioVal.i8Val);
 		break;
 	case eS16:
-		if (_pIo[idx].nfactor > 0)
+		if (_pIo[idx].type == eAnalog)
 		{
-			int val1 = _pIo[idx].ioVal.i16Val / _pIo[idx].nfactor;
-			int val2 = abs(_pIo[idx].ioVal.i16Val % _pIo[idx].nfactor);
+			int val1 = _pIo[idx].ioVal.i16Val / 10;
+			int val2 = abs(_pIo[idx].ioVal.i16Val % 10);
 			sprintf(pszValue, "%d.%d", val1, val2);
 		}
 		else
@@ -413,10 +384,10 @@ bool IoContainer::GetSzValue(int idx, char *pszValue)
 		}
 		break;
 	case eS32:
-		if (_pIo[idx].nfactor > 0)
+		if (_pIo[idx].type == eAnalog)
 		{
-			int val1 = _pIo[idx].ioVal.i32Val / _pIo[idx].nfactor;
-			int val2 = abs(_pIo[idx].ioVal.i32Val % _pIo[idx].nfactor);
+			int val1 = _pIo[idx].ioVal.i32Val / 10;
+			int val2 = abs(_pIo[idx].ioVal.i32Val % 10);
 			sprintf(pszValue, "%d.%d", val1, val2);
 		}
 		else
@@ -425,22 +396,13 @@ bool IoContainer::GetSzValue(int idx, char *pszValue)
 		}
 		break;
 	case eU8:
-		if (_pIo[idx].nfactor > 0)
-		{
-			int val1 = _pIo[idx].ioVal.u8Val / _pIo[idx].nfactor;
-			int val2 = _pIo[idx].ioVal.u8Val % _pIo[idx].nfactor;
-			sprintf(pszValue, "%d.%d", val1, val2);
-		}
-		else
-		{
-			sprintf(pszValue, "%d", _pIo[idx].ioVal.u8Val);
-		}
+		sprintf(pszValue, "%d", _pIo[idx].ioVal.u8Val);
 		break;
 	case eU16:
-		if (_pIo[idx].nfactor > 0)
+		if (_pIo[idx].type == eAnalog)
 		{
-			int val1 = _pIo[idx].ioVal.u16Val / _pIo[idx].nfactor;
-			int val2 = _pIo[idx].ioVal.u16Val % _pIo[idx].nfactor;
+			int val1 = _pIo[idx].ioVal.i32Val / 10;
+			int val2 = abs(_pIo[idx].ioVal.i32Val % 10);
 			sprintf(pszValue, "%d.%d", val1, val2);
 		}
 		else
@@ -449,10 +411,10 @@ bool IoContainer::GetSzValue(int idx, char *pszValue)
 		}
 		break;
 	case eU32:
-		if (_pIo[idx].nfactor > 0)
+		if (_pIo[idx].type == eAnalog)
 		{
-			int val1 = _pIo[idx].ioVal.u32Val / _pIo[idx].nfactor;
-			int val2 = _pIo[idx].ioVal.u32Val % _pIo[idx].nfactor;
+			int val1 = _pIo[idx].ioVal.i32Val / 10;
+			int val2 = abs(_pIo[idx].ioVal.i32Val % 10);
 			sprintf(pszValue, "%d.%d", val1, val2);
 		}
 		else
@@ -492,13 +454,26 @@ int IoContainer::GetExpiredIoElement(IoDirection eIoDir)
 
 	for (int i = 0; i < _size; i++)
 	{
-		if (_pIo[i].eIoDir == eIoDir)
+		switch (eIoDir)
 		{
-			if (_pIo[i].ulPublishInterval > 0 && (millis() - _pIo[i].ulUpdateTime > _pIo[i].ulPublishInterval))
+			case R:
+			if ((_pIo[i].ulPublishInterval > 0 && (millis() - _pIo[i].ulUpdateTime > _pIo[i].ulPublishInterval)))
 			{
 				nRetval = i;
+				return nRetval;
 				break;
 			}
+			break;
+			case W:
+			case RW:
+			if (_pIo[i].bTrig)
+			{
+				nRetval = i;
+				_pIo[i].bTrig = false;	// TODO. Move reset of trig to NibeHeater
+				return nRetval;
+				break;
+			}
+			break;
 		}
 	}
 
