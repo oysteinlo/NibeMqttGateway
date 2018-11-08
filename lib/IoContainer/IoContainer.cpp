@@ -154,13 +154,10 @@ bool IoContainer::SetIoVal(int idx, IoVal io)
 	bool bFound = false;
 
 	// Check for error status
-	if(_pIo[idx].type == eAnalog)
+	if(_errorVal[_pIo[idx].type].u32Val == io.u32Val)
 	{
-		if (_errorVal > 0 && io.i16Val == _errorVal)
-		{
-			rdebugWln("Error value %s", _pIo[idx].szTag);
-			return false;
-		}
+		rdebugWln("Error value %s", _pIo[idx].szTag);
+		return false;
 	}
 
 	if (idx < _size && idx >= 0)
@@ -182,9 +179,17 @@ bool IoContainer::SetIoVal(int idx, char *pVal, size_t length)
 	return SetIoVal(idx, io);
 }
 
-void IoContainer::SetErrorVal(uint val)
+bool IoContainer::SetIoVal(unsigned int adress, char *pVal, size_t length)
 {
-	_errorVal = val;
+	IoVal io;
+
+	memcpy(&io, pVal, length);
+	return SetIoVal(GetIoIndex(adress), io);
+}
+
+void IoContainer::SetErrorVal(IoType_t type, IoVal val)
+{
+	_errorVal[type] = val;
 }
 
 bool IoContainer::SetIoSzVal(int idx, char *pVal, size_t length)
