@@ -47,7 +47,9 @@ NibeHeater::NibeHeater(NibeMessage **ppMsg)
 NibeHeater::NibeHeater(NibeMessage **ppMsg, IoContainer *pIoContainer)
 {
 	_ioContainer = pIoContainer;
-	_ioContainer->SetErrorVal(0x5c5c);	// Analog int16 messages with value 0x5c5c are wrong, seems to be an error status
+	IoVal error = {0};
+	error.i16Val = 0x5c5c;
+	_ioContainer->SetErrorVal(eAnalog, error);	// Analog int16 messages with value 0x5c5c are wrong, seems to be an error status
 
 	_rxMsgHandler = *ppMsg = new NibeMessage(this, "Rx");
 	_txMsgHandler = new NibeMessage(this, "Tx");
@@ -92,45 +94,43 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 	{
 		_rxMsgHandler->Send(ACK);
 
+		int i = 0;
 		const int datalength = 4;
-		for (int i = 0; i < pMsg->msg.length; i += datalength)
+		int size = 0;
+		DataU data = {0};
+		do
 		{
 			#ifdef WIN32
 			unsigned int adress = word(*(pMsg->msg.data + i), *(pMsg->msg.data + i + 1));
 			#else
 			unsigned int adress = word(*(pMsg->msg.data + i + 1), *(pMsg->msg.data + i));
 			#endif
-			
-			char data[4] =
-			{
-				*(pMsg->msg.data + i + 2) ,
-				*(pMsg->msg.data + i + 3)
-			};
 
-			int idx = _ioContainer->GetIoIndex(adress);
-			size_t size = _ioContainer->GetIoSize(idx);
-			if (size == 4)
+			if (size > 0 && adress != 0xffff)
 			{
-				i += datalength;
-				adress = word(*(pMsg->msg.data + i), *(pMsg->msg.data + i + 1));
-				if (adress == 0xffff)
-				{
-					data[2] = *(pMsg->msg.data + i + 2);
-					data[3] = *(pMsg->msg.data + i + 3);
-				}
+				_ioContainer->SetIoVal(data.data.adress, data.buffer, size);
+				size = 0;
 			}
-
-			if (size == 2)
+			else if (adress != 0xffff)
 			{
-				if (data[0] == 0x5c && data[1] == 0x5c)
-				{
-					DEBUG_PRINT("Error value: %d", idx);
-					data[0] = 0;
-					data[1] = 0;
-				}	
+				data.data.adress = adress;
 			}
-			_ioContainer->SetIoVal(idx, data, size);
+			data.data.value.array[size + 0] = pMsg->msg.data[i + 1];
+			data.data.value.array[size + 1] = pMsg->msg.data[i + 0];
+			size += 2;
+			i += datalength;
 		}
+		while (i < pMsg->msg.length);
+
+			// if (size == 2)
+			// {
+			// 	if (data[0] == 0x5c && data[1] == 0x5c)
+			// 	{
+			// 		DEBUG_PRINT("Error value: %d", idx);
+			// 		data[0] = 0;
+			// 		data[1] = 0;
+			// 	}	
+			// }
 	}
 	break;
 	case READREQ:

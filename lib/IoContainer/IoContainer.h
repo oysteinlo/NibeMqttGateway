@@ -25,6 +25,7 @@ typedef enum IoType
 {
 	eDefault,
 	eAnalog,
+	eNumOfIoTypes
 } IoType_t;
 
 typedef enum IoDirection
@@ -44,6 +45,7 @@ typedef union IoVal
 	uint16_t u16Val;
 	uint32_t u32Val;
 	float fVal;
+	byte array[4];
 	char *pSzVal;
 } IoVal_t;
 
@@ -72,10 +74,10 @@ class IoContainer
 private:
 	IoElement_t *_pIo;
 	int _size;
-	uint _errorVal;
 	char _szName[16];
 	char _szTag[32];
 	pPublish _pPub;		// Pointer to publish function
+	IoVal _errorVal[eNumOfIoTypes];
 	
 
 	bool SetIoSzVal(IoElement * pIoEl, char * pVal, unsigned int length);
@@ -98,9 +100,10 @@ public:
 	bool SetIoVal(int idx, bool bVal);
 	bool SetIoVal(int idx, IoVal io);
 	bool SetIoVal(int idx, char * pVal, size_t length);
+	bool SetIoVal(unsigned int adress, char * pVal, size_t length);
 	bool SetIoSzVal(int idx, char * pVal, size_t length);
 	bool SetIoSzVal(char *pTag, char *pVal, size_t length);
-	void SetErrorVal(uint val);
+	void SetErrorVal(IoType_t type, IoVal val);
 	
 	int GetExpiredIoElement(IoDirection eIoDir);
 	IoElement* GetIoElement(char *pTag);
