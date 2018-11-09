@@ -45,7 +45,7 @@ typedef union IoVal
 	uint16_t u16Val;
 	uint32_t u32Val;
 	float fVal;
-	byte array[4];
+	char array[4];
 	char *pSzVal;
 } IoVal_t;
 
@@ -100,7 +100,7 @@ public:
 	bool SetIoVal(int idx, bool bVal);
 	bool SetIoVal(int idx, IoVal io);
 	bool SetIoVal(int idx, char * pVal, size_t length);
-	bool SetIoVal(unsigned int adress, char * pVal, size_t length);
+	bool SetIoVal(uint16_t adress, char * pVal, size_t length);
 	bool SetIoSzVal(int idx, char * pVal, size_t length);
 	bool SetIoSzVal(char *pTag, char *pVal, size_t length);
 	void SetErrorVal(IoType_t type, IoVal val);

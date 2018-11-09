@@ -179,7 +179,7 @@ bool IoContainer::SetIoVal(int idx, char *pVal, size_t length)
 	return SetIoVal(idx, io);
 }
 
-bool IoContainer::SetIoVal(unsigned int adress, char *pVal, size_t length)
+bool IoContainer::SetIoVal(uint16_t adress, char *pVal, size_t length)
 {
 	IoVal io;
 

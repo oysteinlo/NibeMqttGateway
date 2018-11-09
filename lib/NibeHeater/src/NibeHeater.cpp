@@ -97,26 +97,26 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 		int i = 0;
 		const int datalength = 4;
 		int size = 0;
-		DataU data = {0};
+		DataElement_t data = {0};
 		do
 		{
 			#ifdef WIN32
-			unsigned int adress = word(*(pMsg->msg.data + i), *(pMsg->msg.data + i + 1));
+			uint16_t adress = word(*(pMsg->msg.data + i), *(pMsg->msg.data + i + 1));
 			#else
-			unsigned int adress = word(*(pMsg->msg.data + i + 1), *(pMsg->msg.data + i));
+			uint16_t adress = word(*(pMsg->msg.data + i + 1), *(pMsg->msg.data + i));
 			#endif
 
 			if (size > 0 && adress != 0xffff)
 			{
-				_ioContainer->SetIoVal(data.data.adress, data.buffer, size);
+				_ioContainer->SetIoVal(data.adress, data.value.array, size);
 				size = 0;
 			}
 			else if (adress != 0xffff)
 			{
-				data.data.adress = adress;
+				data.adress = adress;
 			}
-			data.data.value.array[size + 0] = pMsg->msg.data[i + 1];
-			data.data.value.array[size + 1] = pMsg->msg.data[i + 0];
+			data.value.array[size + 0] = pMsg->msg.data[i + 2];
+			data.value.array[size + 1] = pMsg->msg.data[i + 3];
 			size += 2;
 			i += datalength;
 		}
