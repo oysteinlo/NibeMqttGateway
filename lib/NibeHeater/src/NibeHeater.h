@@ -20,7 +20,7 @@ typedef bool(*pFunc) (byte);
 
 typedef struct
 {
-	word adress;
+	uint16_t adress;
 	IoVal_t value;
 } DataElement_t;
 

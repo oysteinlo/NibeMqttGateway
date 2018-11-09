@@ -115,8 +115,8 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 			{
 				data.data.adress = adress;
 			}
-			data.data.value.array[size + 0] = pMsg->msg.data[i + 1];
-			data.data.value.array[size + 1] = pMsg->msg.data[i + 0];
+			data.data.value.array[size + 0] = pMsg->msg.data[i + 3];
+			data.data.value.array[size + 1] = pMsg->msg.data[i + 2];
 			size += 2;
 			i += datalength;
 		}

@@ -167,6 +167,10 @@ bool IoContainer::SetIoVal(int idx, IoVal io)
 		_pIo[idx].bActive = true;
 		bFound = Publish(idx);
 	}
+	else
+	{
+		rdebugWln("ID not existing %d", idx);
+	}
 	return bFound;
 }
 
@@ -179,7 +183,7 @@ bool IoContainer::SetIoVal(int idx, char *pVal, size_t length)
 	return SetIoVal(idx, io);
 }
 
-bool IoContainer::SetIoVal(unsigned int adress, char *pVal, size_t length)
+bool IoContainer::SetIoVal(uint16_t adress, char *pVal, size_t length)
 {
 	IoVal io;
 
@@ -312,6 +316,11 @@ int IoContainer::GetIoIndex(unsigned int id)
 			nRetval = i;
 			break;
 		}
+	}
+
+	if (nRetval < 0)
+	{
+		rdebugWln("Adress not found %u", id);
 	}
 
 	return nRetval;
