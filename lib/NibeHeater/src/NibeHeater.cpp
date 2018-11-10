@@ -111,7 +111,7 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 				_ioContainer->SetIoVal(data.adress, data.value.array, size);
 				size = 0;
 			}
-			else if (adress != 0xffff)
+			if (adress != 0xffff)
 			{
 				data.adress = adress;
 			}
@@ -119,18 +119,7 @@ bool NibeHeater::HandleMessage(Message *pMsg)
 			data.value.array[size + 1] = pMsg->msg.data[i + 3];
 			size += 2;
 			i += datalength;
-		}
-		while (i < pMsg->msg.length);
-
-			// if (size == 2)
-			// {
-			// 	if (data[0] == 0x5c && data[1] == 0x5c)
-			// 	{
-			// 		DEBUG_PRINT("Error value: %d", idx);
-			// 		data[0] = 0;
-			// 		data[1] = 0;
-			// 	}	
-			// }
+		} while (i < pMsg->msg.length);
 	}
 	break;
 	case READREQ:
