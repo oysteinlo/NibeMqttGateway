@@ -6,3 +6,5 @@ Data from heatpump is decoded and published using MQTT protocol.
 - Support reading of cyclic data
 - Support read of specific address
 - Support writing specific address
+
+The project uses Visual Code with Platform IO and Arduino platform.
