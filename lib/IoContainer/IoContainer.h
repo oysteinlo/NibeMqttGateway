@@ -76,7 +76,7 @@ private:
 	int _size;
 	char _szName[16];
 	char _szTag[32];
-	pPublish _pPub;		// Pointer to publish function
+	pPublish _pPub = nullptr;		// Pointer to publish function
 	IoVal _errorVal[eNumOfIoTypes];
 	
 

@@ -4,6 +4,8 @@
 #include <AsyncMqttClient.h>
 #include "NibeHeater.h"
 #include "IoContainer.h"
+
+#define REMOTEDEBUG
 #include "DebugLog.h"
 
 #define WIFI_SSID "WiFi2"

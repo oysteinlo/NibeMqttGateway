@@ -59,7 +59,7 @@ private:
 	bool _bInProgress = false;
 
 	char _printBuffer[PRINT_BUF_SIZE];
-	pFunc pSendReply;
+	pFunc pSendReply = nullptr;
 
 public:
 	NibeMessage();

@@ -153,6 +153,12 @@ bool IoContainer::SetIoVal(int idx, IoVal io)
 {
 	bool bFound = false;
 
+	if (idx < 0 || idx >= _size)
+	{
+		rdebugWln("Out of index %d",idx);
+		return false;
+
+	}
 	// Check for error status
 	if(_errorVal[_pIo[idx].type].u32Val == io.u32Val)
 	{
@@ -429,7 +435,7 @@ bool IoContainer::GetSzValue(int idx, char *pszValue)
 		break;
 	case eFloat:
 #ifdef WIN32
-		sprintf(pszValue, "%f", (_pIo[idx].ioVal.fVal / _pIo[idx].nfactor));
+		sprintf(pszValue, "%f", (_pIo[idx].ioVal.fVal));
 #else
 		char str_temp[32];
 		dtostrf(_pIo[idx].ioVal.fVal, 4, 2, str_temp);
