@@ -8,3 +8,9 @@ Data from heatpump is decoded and published using MQTT protocol.
 - Support writing specific address
 
 The project uses Visual Code with Platform IO and Arduino platform.
+
+Known limitations/bugs:
+- 32 bit values are not coded/decoded correctly
+- Published messages that are subscribed will be written back to heatpump.
+
+Use at own risk
