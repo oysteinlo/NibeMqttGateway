@@ -127,7 +127,7 @@ bool IoContainer::IsPublished(IoElement *pIo)
 
 bool IoContainer::SetIoVal(int idx, float fVal)
 {
-	IoVal io;
+	IoVal = {0};
 	io.fVal = fVal;
 
 	return SetIoVal(idx, io);
@@ -135,7 +135,7 @@ bool IoContainer::SetIoVal(int idx, float fVal)
 
 bool IoContainer::SetIoVal(int idx, int iVal)
 {
-	IoVal io;
+	IoVal io = {0};
 	io.i32Val = iVal;
 
 	return SetIoVal(idx, io);
@@ -143,7 +143,7 @@ bool IoContainer::SetIoVal(int idx, int iVal)
 
 bool IoContainer::SetIoVal(int idx, bool bVal)
 {
-	IoVal io;
+	IoVal = {0};
 	io.bVal = bVal;
 
 	return SetIoVal(idx, io);
@@ -178,7 +178,7 @@ bool IoContainer::SetIoVal(int idx, IoVal io)
 
 bool IoContainer::SetIoVal(int idx, char *pVal, size_t length)
 {
-	IoVal io;
+	IoVal io = {0};
 
 	memcpy(&io, pVal, length);
 	
@@ -187,7 +187,7 @@ bool IoContainer::SetIoVal(int idx, char *pVal, size_t length)
 
 bool IoContainer::SetIoVal(uint16_t adress, char *pVal, size_t length)
 {
-	IoVal io = { 0 };
+	IoVal io = {0};
 
 	memcpy(&io, pVal, length);
 	return SetIoVal(GetIoIndex(adress), io);
