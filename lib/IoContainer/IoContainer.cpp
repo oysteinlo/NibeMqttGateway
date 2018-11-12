@@ -160,10 +160,13 @@ bool IoContainer::SetIoVal(int idx, IoVal io)
 
 	}
 	// Check for error status
-	if(_errorVal[_pIo[idx].type].u32Val == io.u32Val)
+	if (_errorVal[_pIo[idx].type].bInUse)
 	{
-		rdebugWln("Error value %s", _pIo[idx].szTag);
-		return false;
+		if(_errorVal[_pIo[idx].type].io.u32Val == io.u32Val)
+		{
+			rdebugWln("Error value %s", _pIo[idx].szTag);
+			return false;
+		}
 	}
 
 	if (idx < _size && idx >= 0)
@@ -195,7 +198,8 @@ bool IoContainer::SetIoVal(uint16_t adress, char *pVal, size_t length)
 
 void IoContainer::SetErrorVal(IoType_t type, IoVal val)
 {
-	_errorVal[type] = val;
+	_errorVal[type].io = val;
+	_errorVal[type].bInUse = true;
 }
 
 bool IoContainer::SetIoSzVal(int idx, char *pVal, size_t length)
