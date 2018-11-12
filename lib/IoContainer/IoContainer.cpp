@@ -187,7 +187,7 @@ bool IoContainer::SetIoVal(int idx, char *pVal, size_t length)
 
 bool IoContainer::SetIoVal(uint16_t adress, char *pVal, size_t length)
 {
-	IoVal io;
+	IoVal io = { 0 };
 
 	memcpy(&io, pVal, length);
 	return SetIoVal(GetIoIndex(adress), io);
@@ -219,7 +219,7 @@ bool IoContainer::SetIoSzVal(char *pTag, char *pVal, size_t length)
 		pVal[length] = '\0';
 		bUpdated = SetIoSzVal(pIoEl, pVal, length);
 
-		if (bUpdated)
+		if (bUpdated && !IsPublished(pIoEl))
 		{
 			pIoEl->bTrig = true;
 		}

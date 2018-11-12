@@ -71,7 +71,7 @@ void NibeMessage::AddByte(byte b)
 	default:
 		if (_msg.msg.length + Length + 1 == _nByteIdx)
 		{
-			if (CheckSum() == b)
+			if (CheckSum() == b || !_bUseCheckSum)
 			{
 				// If there is no parent (typically unittest we send ack directly
 				if (_pNibe == nullptr)
@@ -107,6 +107,11 @@ void NibeMessage::AddByte(byte b)
 void NibeMessage::SetInterFrameGap(unsigned long gap)
 {
 	_nInterFrameGap = gap;
+}
+
+void NibeMessage::UseCheckSum(bool use)
+{
+	_bUseCheckSum = use;
 }
 
 void NibeMessage::Loop()

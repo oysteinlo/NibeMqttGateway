@@ -57,6 +57,7 @@ private:
 
 	bool _bDataReady = false;
 	bool _bInProgress = false;
+	bool _bUseCheckSum = true;
 
 	char _printBuffer[PRINT_BUF_SIZE];
 	pFunc pSendReply = nullptr;
@@ -68,6 +69,7 @@ public:
 	void AddByte(byte b);
 
 	void SetInterFrameGap(unsigned long gap);
+	void UseCheckSum(bool use);
 
 	void Loop();
 
