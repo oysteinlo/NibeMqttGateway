@@ -127,7 +127,7 @@ bool IoContainer::IsPublished(IoElement *pIo)
 
 bool IoContainer::SetIoVal(int idx, float fVal)
 {
-	IoVal = {0};
+	IoVal io = {0};
 	io.fVal = fVal;
 
 	return SetIoVal(idx, io);
@@ -143,7 +143,7 @@ bool IoContainer::SetIoVal(int idx, int iVal)
 
 bool IoContainer::SetIoVal(int idx, bool bVal)
 {
-	IoVal = {0};
+	IoVal io = {0};
 	io.bVal = bVal;
 
 	return SetIoVal(idx, io);
