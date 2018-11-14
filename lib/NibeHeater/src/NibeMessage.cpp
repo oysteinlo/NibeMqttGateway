@@ -71,7 +71,7 @@ void NibeMessage::AddByte(byte b)
 	default:
 		if (_msg.msg.length + Length + 1 == _nByteIdx)
 		{
-			if (CheckSum() == b)
+			if (CheckSum() == b || !_bUseCheckSum)
 			{
 				// If there is no parent (typically unittest we send ack directly
 				if (_pNibe == nullptr)
@@ -107,6 +107,11 @@ void NibeMessage::AddByte(byte b)
 void NibeMessage::SetInterFrameGap(unsigned long gap)
 {
 	_nInterFrameGap = gap;
+}
+
+void NibeMessage::UseCheckSum(bool use)
+{
+	_bUseCheckSum = use;
 }
 
 void NibeMessage::Loop()
@@ -195,16 +200,21 @@ Message* NibeMessage::GetMessage()
 	return &_msg;
 }
 
+
 size_t NibeMessage::printTo(Print& p) const
 {
+
 	size_t n = 0;
+#ifndef WIN32		
 	n += p.print(_name);
     for(int i = 0; i < _msg.msg.length + Data + 1; i++) {	// Control data + CRC
         n += p.print(' ');
         n += p.print(_msg.buffer[i], HEX);
     }
+#endif // !WIN32
     return n;
 } 
+
 
 #ifdef REMOVE
 char* NibeMessage::LogMessage()

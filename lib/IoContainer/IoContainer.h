@@ -45,7 +45,7 @@ typedef union IoVal
 	uint16_t u16Val;
 	uint32_t u32Val;
 	float fVal;
-	byte array[4];
+	char array[4];
 	char *pSzVal;
 } IoVal_t;
 
@@ -67,22 +67,26 @@ typedef struct IoElement
 	bool bActive;
 } IoElement_t;
 
+typedef struct
+{
+	IoVal io;
+	bool bInUse;
+} ErrorVal_t;
+
 typedef bool(*pPublish) (char*, char*);
 
 class IoContainer
 {
 private:
-	IoElement_t *_pIo;
+	IoElement_t *_pIo = nullptr;
 	int _size;
 	char _szName[16];
 	char _szTag[32];
-	pPublish _pPub;		// Pointer to publish function
-	IoVal _errorVal[eNumOfIoTypes];
-	
+	pPublish _pPub = nullptr;		// Pointer to publish function
+	ErrorVal_t _errorVal[eNumOfIoTypes];
 
 	bool SetIoSzVal(IoElement * pIoEl, char * pVal, unsigned int length);
 	bool IsLegal(int idx, IoVal *pIo);
-
 
 public:
 	IoContainer(const char *szName, IoElement_t *pIo, size_t size);

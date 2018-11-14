@@ -1,3 +1,4 @@
+#pragma once
 #include "Printable.h"
 
 #define REMOTEDEBUG
@@ -18,8 +19,16 @@
 
 extern RemoteDebug Debug;
 #else
-#define DEBUG_PRINT
+#define rdebugWln
+#define rdebugDln
+#define rdebugApln
+#define rdebugpPln
+#define rdebugpVln
 #define rdebugpDln
+#define rdebugpIln
+#define rdebugpWln
+#define rdebugpEln
+#define DEBUG_PRINT
 #endif
 
 class DebugLog : public Printable

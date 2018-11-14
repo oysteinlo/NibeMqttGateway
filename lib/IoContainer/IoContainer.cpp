@@ -127,7 +127,7 @@ bool IoContainer::IsPublished(IoElement *pIo)
 
 bool IoContainer::SetIoVal(int idx, float fVal)
 {
-	IoVal io;
+	IoVal io = {0};
 	io.fVal = fVal;
 
 	return SetIoVal(idx, io);
@@ -135,7 +135,7 @@ bool IoContainer::SetIoVal(int idx, float fVal)
 
 bool IoContainer::SetIoVal(int idx, int iVal)
 {
-	IoVal io;
+	IoVal io = {0};
 	io.i32Val = iVal;
 
 	return SetIoVal(idx, io);
@@ -143,7 +143,7 @@ bool IoContainer::SetIoVal(int idx, int iVal)
 
 bool IoContainer::SetIoVal(int idx, bool bVal)
 {
-	IoVal io;
+	IoVal io = {0};
 	io.bVal = bVal;
 
 	return SetIoVal(idx, io);
@@ -153,11 +153,20 @@ bool IoContainer::SetIoVal(int idx, IoVal io)
 {
 	bool bFound = false;
 
-	// Check for error status
-	if(_errorVal[_pIo[idx].type].u32Val == io.u32Val)
+	if (idx < 0 || idx >= _size)
 	{
-		rdebugWln("Error value %s", _pIo[idx].szTag);
+		rdebugWln("Out of index %d",idx);
 		return false;
+
+	}
+	// Check for error status
+	if (_errorVal[_pIo[idx].type].bInUse)
+	{
+		if(_errorVal[_pIo[idx].type].io.u32Val == io.u32Val)
+		{
+			rdebugWln("Error value %s", _pIo[idx].szTag);
+			return false;
+		}
 	}
 
 	if (idx < _size && idx >= 0)
@@ -167,16 +176,12 @@ bool IoContainer::SetIoVal(int idx, IoVal io)
 		_pIo[idx].bActive = true;
 		bFound = Publish(idx);
 	}
-	else
-	{
-		rdebugWln("ID not existing %d", idx);
-	}
 	return bFound;
 }
 
 bool IoContainer::SetIoVal(int idx, char *pVal, size_t length)
 {
-	IoVal io;
+	IoVal io = {0};
 
 	memcpy(&io, pVal, length);
 	
@@ -185,7 +190,7 @@ bool IoContainer::SetIoVal(int idx, char *pVal, size_t length)
 
 bool IoContainer::SetIoVal(uint16_t adress, char *pVal, size_t length)
 {
-	IoVal io;
+	IoVal io = {0};
 
 	memcpy(&io, pVal, length);
 	return SetIoVal(GetIoIndex(adress), io);
@@ -193,7 +198,8 @@ bool IoContainer::SetIoVal(uint16_t adress, char *pVal, size_t length)
 
 void IoContainer::SetErrorVal(IoType_t type, IoVal val)
 {
-	_errorVal[type] = val;
+	_errorVal[type].io = val;
+	_errorVal[type].bInUse = true;
 }
 
 bool IoContainer::SetIoSzVal(int idx, char *pVal, size_t length)
@@ -217,7 +223,7 @@ bool IoContainer::SetIoSzVal(char *pTag, char *pVal, size_t length)
 		pVal[length] = '\0';
 		bUpdated = SetIoSzVal(pIoEl, pVal, length);
 
-		if (bUpdated)
+		if (bUpdated && !IsPublished(pIoEl))
 		{
 			pIoEl->bTrig = true;
 		}
@@ -316,11 +322,6 @@ int IoContainer::GetIoIndex(unsigned int id)
 			nRetval = i;
 			break;
 		}
-	}
-
-	if (nRetval < 0)
-	{
-		rdebugWln("Adress not found %u", id);
 	}
 
 	return nRetval;
@@ -438,7 +439,7 @@ bool IoContainer::GetSzValue(int idx, char *pszValue)
 		break;
 	case eFloat:
 #ifdef WIN32
-		sprintf(pszValue, "%f", (_pIo[idx].ioVal.fVal / _pIo[idx].nfactor));
+		sprintf(pszValue, "%f", (_pIo[idx].ioVal.fVal));
 #else
 		char str_temp[32];
 		dtostrf(_pIo[idx].ioVal.fVal, 4, 2, str_temp);

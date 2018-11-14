@@ -24,12 +24,6 @@ typedef struct
 	IoVal_t value;
 } DataElement_t;
 
-union DataU 
-{
-	DataElement_t data;
-	char buffer[MAX_MSG_BUFFER];
-};
-
 class NibeHeater
 {
 
