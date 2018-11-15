@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+#include <ESP8266httpUpdate.h>
 #include <Ticker.h>
 #include <AsyncMqttClient.h>
 #include "NibeHeater.h"
@@ -83,6 +85,7 @@ NibeMessage *pNibeMsgHandler;
 NibeHeater nibeHandler(&pNibeMsgHandler, &io);
 
 void processCmdRemoteDebug();
+void OtaUpdate() ;
 
 bool SendReply(byte b)
 {
@@ -313,5 +316,30 @@ void processCmdRemoteDebug() {
 			rdebugAln("Max loop time %u", maxLoopTime);
 		}
   }
+
+	if (lastCmd == "update")
+	{
+		OtaUpdate();
+	}
 }
 #endif
+
+void OtaUpdate() {
+
+    t_httpUpdate_return ret = ESPhttpUpdate.update("192.168.10.10", 80, "/firmware.bin");
+
+    switch (ret) {
+      case HTTP_UPDATE_FAILED:
+        DEBUG_PRINT("HTTP_UPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+        break;
+
+      case HTTP_UPDATE_NO_UPDATES:
+        DEBUG_PRINT("HTTP_UPDATE_NO_UPDATES");
+        break;
+
+      case HTTP_UPDATE_OK:
+        DEBUG_PRINT("HTTP_UPDATE_OK");
+        break;
+		}
+    
+}
