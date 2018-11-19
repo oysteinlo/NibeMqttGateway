@@ -117,6 +117,7 @@ bool IoContainer::IsPublished(IoElement *pIo)
 	case eFloat:
 		bPublished = fabs(pIo->ioVal.fVal - pIo->pubIoVal.fVal) < pIo->fPublishDeadband;
 		break;
+	case eText:
 		bPublished = strcmp(pIo->ioVal.pSzVal, pIo->pubIoVal.pSzVal) == 0;
 	default:
 		break;
