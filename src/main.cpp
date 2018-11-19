@@ -317,7 +317,6 @@ void processCmdRemoteDebug() {
 			rdebugAln("Max loop time %u", maxLoopTime);
 		}
   }
-
 	if (lastCmd == "update")
 	{
 		DEBUG_PRINT("Request update");
@@ -349,5 +348,4 @@ void OtaUpdate() {
         DEBUG_PRINT("HTTP_UPDATE_OK");
         break;
 		}
-    
 }
