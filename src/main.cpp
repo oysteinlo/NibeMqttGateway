@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+#include <ESP8266httpUpdate.h>
 #include <Ticker.h>
 #include <AsyncMqttClient.h>
 #include "NibeHeater.h"
@@ -75,6 +77,7 @@ IoElement_t iopoints[] =
 		/*37*/ {"DM start heating", 					 	47206, 		eS16, 	RW,		eDefault,	60000, 	1.0f},
 		/*38*/ {"DM between add. steps", 			 	47209, 		eS16, 	RW,		eDefault,	60000, 	1.0f},
 		/*39*/ {"Holiday activated", 						48043, 		eU8, 		RW,		eDefault,	60000, 	0.0f},
+		/*40*/ {"Room sensor setpoint S1",			47398, 		eS16,		RW,		eAnalog,	60000, 	0.0f},
 	};
 const byte numIoPoints = sizeof(iopoints) / sizeof(IoElement_t);
 IoContainer io("Nibe", iopoints, numIoPoints);
@@ -83,6 +86,7 @@ NibeMessage *pNibeMsgHandler;
 NibeHeater nibeHandler(&pNibeMsgHandler, &io);
 
 void processCmdRemoteDebug();
+void OtaUpdate() ;
 
 bool SendReply(byte b)
 {
@@ -207,7 +211,7 @@ void setup() {
  #ifdef DEBUG
   Debug.begin("DEBUG"); // Initiaze the telnet server
   Debug.setResetCmdEnabled(true); // Enable the reset command
-  Debug.setCallBackProjectCmds(&processCmdRemoteDebug);
+  Debug.setCallBackProjectCmds(processCmdRemoteDebug);
   //Debug.setSerialEnabled(true);
 	#endif
 	
@@ -313,5 +317,35 @@ void processCmdRemoteDebug() {
 			rdebugAln("Max loop time %u", maxLoopTime);
 		}
   }
+	if (lastCmd == "update")
+	{
+		DEBUG_PRINT("Request update");
+		OtaUpdate();
+	}
+
+	if (lastCmd == "version")
+	{
+		DEBUG_PRINT("Version x");
+	}
 }
 #endif
+
+void OtaUpdate() {
+  t_httpUpdate_return ret = ESPhttpUpdate.update("192.168.10.10", 80, "/firmware.bin");
+
+	DEBUG_PRINT("Start update");
+
+    switch (ret) {
+      case HTTP_UPDATE_FAILED:
+        DEBUG_PRINT("HTTP_UPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+        break;
+
+      case HTTP_UPDATE_NO_UPDATES:
+        DEBUG_PRINT("HTTP_UPDATE_NO_UPDATES");
+        break;
+
+      case HTTP_UPDATE_OK:
+        DEBUG_PRINT("HTTP_UPDATE_OK");
+        break;
+		}
+}
