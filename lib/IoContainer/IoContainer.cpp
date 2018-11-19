@@ -119,6 +119,7 @@ bool IoContainer::IsPublished(IoElement *pIo)
 		break;
 	case eText:
 		bPublished = strcmp(pIo->ioVal.pSzVal, pIo->pubIoVal.pSzVal) == 0;
+		break;
 	default:
 		break;
 	}
@@ -246,29 +247,54 @@ bool IoContainer::SetIoSzVal(IoElement *pIoEl, char *pVal, size_t length)
 		break;
 	case eS8:
 		pIoEl->ioVal.i8Val = (int8_t)atoi((char*)pVal);
+		if (pIoEl->type == eAnalog)
+		{
+			pIoEl->ioVal.i8Val *= 10;
+		}
 		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.i8Val);
 		bOk = true;
 		break;
 	case eS16:
 		pIoEl->ioVal.i16Val = (int16_t)atoi((char*)pVal);
+		if (pIoEl->type == eAnalog)
+		{
+			pIoEl->ioVal.i16Val *= 10;
+		}
 		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.i16Val);
 		bOk = true;
 		break;
 	case eS32:
 		pIoEl->ioVal.i32Val = atoi((char*)pVal);
+		if (pIoEl->type == eAnalog)
+		{
+			pIoEl->ioVal.i32Val *= 10;
+		}
 		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.i32Val);
 		bOk = true;
 		break;
 	case eU8:
 		pIoEl->ioVal.u8Val = (uint8_t)atol((char*)pVal);
+		if (pIoEl->type == eAnalog)
+		{
+			pIoEl->ioVal.u8Val *= 10;
+		}
+
 		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.u8Val);
 		bOk = true;
 	case eU16:
 		pIoEl->ioVal.u16Val = (uint16_t)atol((char*)pVal);
+		if (pIoEl->type == eAnalog)
+		{
+			pIoEl->ioVal.u16Val *= 10;
+		}
 		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.u16Val);
 		bOk = true;
 	case eU32:
 		pIoEl->ioVal.u32Val = atol((char*)pVal);
+		if (pIoEl->type == eAnalog)
+		{
+			pIoEl->ioVal.u32Val *= 10;
+		}
 		rdebugDln("%s -> %d", pIoEl->szTag, pIoEl->ioVal.u32Val);
 		bOk = true;
 		break;

@@ -325,7 +325,7 @@ void processCmdRemoteDebug() {
 
 	if (lastCmd == "version")
 	{
-		DEBUG_PRINT("Version x");
+		DEBUG_PRINT("Version xy");
 	}
 }
 #endif
