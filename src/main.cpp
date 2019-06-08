@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
@@ -7,11 +8,16 @@
 #include "NibeHeater.h"
 #include "IoContainer.h"
 
+#define DEBUG
 #define REMOTEDEBUG
 #include "DebugLog.h"
 
-#define WIFI_SSID "WiFi2"
-#define WIFI_PASSWORD "lobbenwifi"
+
+#define XSTR(x) #x
+#define STR(x) XSTR(x)
+
+#define WIFI_SSID STR(SSID)
+#define WIFI_PASSWORD STR(PWD)
 
 #define MQTT_HOST IPAddress(192, 168, 10, 10)
 
@@ -33,6 +39,11 @@ Ticker mqttReconnectTimer;
 WiFiEventHandler wifiConnectHandler;
 WiFiEventHandler wifiDisconnectHandler;
 Ticker wifiReconnectTimer;
+
+RemoteDebug Debug;
+
+
+
 
 IoElement_t iopoints[] =
 	{
@@ -150,7 +161,10 @@ void onMqttConnect(bool sessionPresent) {
 }
 
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
-  DEBUG_PRINT("Disconnected from MQTT.");
+  DEBUG_PRINT("Disconnected from MQTT(%d)", reason);
+
+	EEPROM.write(0, (uint8_t)reason);
+	EEPROM.commit();
 
   if (reason == AsyncMqttClientDisconnectReason::TLS_BAD_FINGERPRINT) {
     DEBUG_PRINT("Bad server fingerprint.");
@@ -180,11 +194,13 @@ void onMqttPublish(uint16_t packetId) {
 
 bool publish(char *topic, char *value)
 {
-	DEBUG_PRINT("Publish %s - %s", topic, value);
+	uint16_t status = mqttClient.publish(topic, 0, false, value);
+	DEBUG_PRINT("Publish %s - %s (%d)", topic, value, status);
 	return mqttClient.publish(topic, 0, false, value);
 }
 
 void setup() {
+	EEPROM.begin(512);
 	pinMode(ENABLE_PIN, OUTPUT);	// RS485 enable pin
 
   Serial.begin(9600);
@@ -320,6 +336,16 @@ void processCmdRemoteDebug() {
 	if (lastCmd == "update")
 	{
 		OtaUpdate();
+	}
+
+	if (lastCmd == "reason")
+	{
+		DEBUG_PRINT ("Reason:%d", EEPROM.read(0));
+	}
+
+	if (lastCmd == "version")
+	{
+		DEBUG_PRINT ("Version:%s", STR(VERSION));
 	}
 }
 #endif

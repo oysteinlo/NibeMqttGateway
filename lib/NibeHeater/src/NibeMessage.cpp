@@ -158,11 +158,6 @@ unsigned long NibeMessage::idleTime()
 {
 	unsigned long dt = millis() - _busTime;
 
-	// Handle wrap aropund
-	if (millis() < _busTime)
-	{
-		dt = dt & 0x0FFFFFFFF;
-	}
 	return dt;
 }
 
