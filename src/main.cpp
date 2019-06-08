@@ -269,7 +269,7 @@ void processCmdRemoteDebug() {
 	}
 	else if (lastCmd == "version")
 	{
-		DEBUG_PRINT ("Version:%s", STR(VERSION));
+		DEBUG_PRINT ("Version:%s", STR(GITVERSION));
   }
 	else
 	{

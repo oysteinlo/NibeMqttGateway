@@ -5,14 +5,10 @@ import subprocess
 print env
 
 # Git revision
-revision = subprocess.check_output(["git", "rev-parse", "HEAD"]).strip()
-
-my_flags = env.ParseFlags(env['BUILD_FLAGS'])
-defines = {k: v for (k, v) in my_flags.get("CPPDEFINES")}
-# print defines
+version = subprocess.check_output(["git", "rev-parse", "HEAD"]).strip()
 
 env.Replace(CPPDEFINES=[
-  ("VERSION", revision)
+  ("GITVERSION", version)
 ])
 
 # Dump construction environments (for debug purpose)
