@@ -157,7 +157,6 @@ void NibeMessage::SetReplyCallback(pFunc func)
 unsigned long NibeMessage::idleTime()
 {
 	unsigned long dt = millis() - _busTime;
-
 	return dt;
 }
 

@@ -88,6 +88,7 @@ IoElement_t iopoints[] =
 		/*37*/ {"DM start heating", 					 	47206, 		eS16, 	RW,		eDefault,	60000, 	1.0f},
 		/*38*/ {"DM between add. steps", 			 	47209, 		eS16, 	RW,		eDefault,	60000, 	1.0f},
 		/*39*/ {"Holiday activated", 						48043, 		eU8, 		RW,		eDefault,	60000, 	0.0f},
+		/*40*/ {"Room sensor setpoint S1",			47398, 		eS16,		RW,		eAnalog,	60000, 	0.0f},
 	};
 const byte numIoPoints = sizeof(iopoints) / sizeof(IoElement_t);
 IoContainer io("Nibe", iopoints, numIoPoints);
@@ -226,7 +227,7 @@ void setup() {
  #ifdef DEBUG
   Debug.begin("DEBUG"); // Initiaze the telnet server
   Debug.setResetCmdEnabled(true); // Enable the reset command
-  Debug.setCallBackProjectCmds(&processCmdRemoteDebug);
+  Debug.setCallBackProjectCmds(processCmdRemoteDebug);
   //Debug.setSerialEnabled(true);
 	#endif
 	
@@ -235,79 +236,12 @@ void setup() {
 
 }
 
-byte readreq[] = {0x5c, 0x0, 0x20, 0x69, 0x0, 0x49};
-byte writereq[] = {0x5c, 0x0, 0x20, 0x6b, 0x0, 0x4b};
-
-//byte testdata[] = { 0x5c, 0x0, 0x20, 0x6a, 0x6, 0xf9, 0xa7, 0x20, 0x1f, 0x0, 0x0, 0x2d };
-byte testdata[] = {0x5c, 0x0, 0x20, 0x68, 0x50, // DATA
-				   0xc9, 0xaf, 0x0, 0x0,		//45001	0xAFC9	Alarm
-				   0xec, 0x9f, 0x76, 0x1,		//40940 0x9FEC	Degree Minutes (32 bit)
-				   0xff, 0xff, 0x0, 0x1,
-				   0x98, 0xa9, 0xe, 0x2c, //43416 0xA998	Compressor starts EB100-EP14
-				   0xff, 0xff, 0x0, 0x0,
-				   0xfd, 0xa0, 0x0, 0x80, //41213 0xA0FD	AZ1-BT50 Room temp [°C]
-				   0xfc, 0xa0, 0x0, 0x80, //41212 0xA0FC	AZ2-BT50 Room temp [°C]
-				   0xf7, 0x9c, 0x0, 0x80, //40183 0x9CF7	AZ30-BT23 Outdoor temp. ERS [°C]
-				   0xfb, 0xa0, 0x0, 0x80, //41211	0xA0FB	AZ3-BT50 Room temp [°C]
-				   0xff, 0xff, 0x0, 0x0,
-				   0xff, 0xff, 0x0, 0x0,
-				   0xff, 0xff, 0x0, 0x0,
-				   0xff, 0xff, 0x0, 0x0,
-				   0xff, 0xff, 0x0, 0x0,
-				   0xff, 0xff, 0x0, 0x0,
-				   0xff, 0xff, 0x0, 0x0,
-				   0xff, 0xff, 0x0, 0x0,
-				   0xff, 0xff, 0x0, 0x0,
-				   0xff, 0xff, 0x0, 0x0,
-				   0xff, 0xff, 0x0, 0x0,
-				   0x59};
-
-
-
-unsigned int maxLoopTime = 0;
-unsigned int startTime = 0;
-unsigned int prevTime = 0;
 void loop() {
-
-
-    
-
-    unsigned int now = millis();
-    if (now - prevTime > maxLoopTime)
-    {
-        maxLoopTime = now - prevTime;
-    }
-
-#if 0
-  if (now - startTime > 5000)
-	{ // run every 25000 ms
-		startTime = now;
-		
-		 for (unsigned int i = 0; i < sizeof(readreq); i++)
-		 {
-		   pNibeMsgHandler->AddByte(readreq[i]);
-		   nibeHandler.Loop();
-		 }
-
-		 for (int i = 0; i < 100; i++)
-		 {
-		   nibeHandler.Loop();
-		 }
-
-		for (unsigned int i = 0; i < sizeof(testdata); i++)
-		{
-		  pNibeMsgHandler->AddByte(testdata[i]);
-		  nibeHandler.Loop();
-		}
-	}
-  
-#else
 
     while (Serial.available())
 	  {
 			pNibeMsgHandler->AddByte(Serial.read());
 	  }
-#endif
 
 	  nibeHandler.Loop();
 	  io.loop();
@@ -315,8 +249,6 @@ void loop() {
 #ifdef DEBUG
     Debug.handle();
 #endif
-
-  	prevTime = millis();
 
     yield();
 }
@@ -326,33 +258,30 @@ void processCmdRemoteDebug() {
 
 	String lastCmd = Debug.getLastCommand();
 
-  if (lastCmd == "maxloop") {
-
-	if (Debug.isActive(Debug.ANY)) {
-			rdebugAln("Max loop time %u", maxLoopTime);
-		}
-  }
-
 	if (lastCmd == "update")
 	{
+		DEBUG_PRINT("Request update");
 		OtaUpdate();
 	}
-
-	if (lastCmd == "reason")
+	else if (lastCmd == "reason")
 	{
 		DEBUG_PRINT ("Reason:%d", EEPROM.read(0));
 	}
-
-	if (lastCmd == "version")
+	else if (lastCmd == "version")
 	{
 		DEBUG_PRINT ("Version:%s", STR(VERSION));
+  }
+	else
+	{
+	  DEBUG_PRINT("Unknown command");
 	}
 }
 #endif
 
 void OtaUpdate() {
+  t_httpUpdate_return ret = ESPhttpUpdate.update("192.168.10.10", 80, "/firmware.bin");
 
-    t_httpUpdate_return ret = ESPhttpUpdate.update("192.168.10.10", 80, "/firmware.bin");
+	DEBUG_PRINT("Start update");
 
     switch (ret) {
       case HTTP_UPDATE_FAILED:
