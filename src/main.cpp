@@ -4,6 +4,7 @@
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
+#include <ESP8266mDNS.h>        // Include the mDNS library
 #include <Ticker.h>
 #include <AsyncMqttClient.h>
 #include "NibeHeater.h"
@@ -13,12 +14,17 @@
 #define REMOTEDEBUG
 #include "DebugLog.h"
 
-
+// Stringify build flag define
 #define XSTR(x) #x
 #define STR(x) XSTR(x)
 
+#ifndef WIFI_SSID
 #define WIFI_SSID STR(SSID)
+#endif
+
+#ifndef WIFI_PASSWORD
 #define WIFI_PASSWORD STR(PWD)
+#endif
 
 #define MQTT_HOST IPAddress(192, 168, 10, 10)
 
@@ -48,48 +54,48 @@ RemoteDebug Debug;
 
 IoElement_t iopoints[] =
 	{
-							/* Tag			        				Identifer,	DaType	IoDir	Type			Cyclic	Deadband*/
+							/* Tag			        Identifer,	DaType	IoDir	Type			Cyclic	Deadband*/
 		/*00*/ {"BT1 Outdoor Temperature", 			40004, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
-		/*01*/ {"Return temperature", 					40012,		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*01*/ {"Return temperature", 				40012,		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
 		/*02*/ {"Hot water temperature top",		40013, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
 		/*03*/ {"Hot water temperature load",		40014, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
-		/*04*/ {"Brine in temperature", 				40015, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
-		/*05*/ {"Brine out temperature", 				40016, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*04*/ {"Brine in temperature", 			40015, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*05*/ {"Brine out temperature", 			40016, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
 		/*06*/ {"Condensor out temperature", 		40017, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
-		/*07*/ {"Hot gas temperature", 					40018, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*07*/ {"Hot gas temperature", 				40018, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
 		/*08*/ {"Liquid line temperature", 			40019, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
-		/*09*/ {"Suction temperature", 					40022, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
-		/*10*/ {"BT50 Room Temp S1", 						40033, 		eS16, 	R, 		eAnalog, 	60000,	0.5f},
+		/*09*/ {"Suction temperature", 				40022, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*10*/ {"BT50 Room Temp S1", 				40033, 		eS16, 	R, 		eAnalog, 	60000,	0.5f},
 		/*11*/ {"Outdoor temperature avg",			40067, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
-		/*12*/ {"Current flow",									40072, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
-		/*13*/ {"DegreeMinute32", 						 	40940, 		eS32, 	R, 		eAnalog, 	60000, 	1.0f},
+		/*12*/ {"Current flow",						40072, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*13*/ {"DegreeMinute32", 					40940, 		eS32, 	R, 		eAnalog, 	60000, 	1.0f},
 		/*14*/ {"BT50 Room Temp S1 Average", 		40195, 		eS16, 	R, 		eAnalog, 	60000,	0.5f},
 		/*15*/ {"Total external hw-electric",		40755, 		eS32, 	R, 		eAnalog, 	60000, 	0.5f},
-		/*16*/ {"Heat Meter", 			 						40771, 		eU32, 	R, 		eAnalog, 	60000, 	1.0f},
-		/*17*/ {"Adjust Temp indoor",						40874, 		eS16, 	R,		eAnalog, 	60000, 	0.5f},
-		/*18*/ {"Adjust Temp outdoor",					40875, 		eS16, 	R,		eAnalog, 	60000, 	0.5f},
-		/*19*/ {"AZ1-BT50 Room temp", 					41213, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
-		/*20*/ {"Smart Home Mode", 							41265, 		eU8, 		RW,		eDefault,	60000, 	0.0f},
-		/*21*/ {"Brine Pump State EP14", 			 	41433, 		eU8, 		R, 		eDefault,	60000, 	0.0f},
-		/*22*/ {"Software version", 						43001, 		eU16, 	R, 		eDefault,	60000, 	0.0f},
-		/*23*/ {"DegreeMinute", 							 	43005, 		eS16, 	R,		eAnalog, 	60000, 	1.0f},
-		/*24*/ {"Compressor starts EB100-EP14", 43416, 		eS32, 	R, 		eDefault, 60000, 	0.0f},
-		/*25*/ {"Tot.op.time compr", 						43420, 		eS32, 	R, 		eDefault,	60000, 	0.0f},
-		/*26*/ {"Tot. HW op.time compr", 				43424, 		eS32, 	R, 		eDefault,	60000, 	0.0f},
-		/*27*/ {"Compressor State EP14", 				43427, 		eU8, 		R, 		eDefault, 60000, 	0.0f},
-		/*28*/ {"Supply Pump State EP14", 			43431, 		eU8, 		R, 		eDefault,	60000, 	0.0f},
-		/*29*/ {"EB100-EP14 Prio", 							44243, 		eU8, 		R, 		eDefault,	60000,	0.0f},
-		/*30*/ {"Alarm", 												45001, 		eS16, 	R, 		eDefault, 60000, 	0.0f},
-		/*31*/ {"Alarm reset", 			 						45171, 		eU8, 		RW,		eDefault,	60000, 	0.0f},
-		/*32*/ {"Hot water mode",							 	47041, 		eS8, 		RW,		eDefault,	60000, 	1.0f},
-		/*33*/ {"Periodic hotwater",					 	47050, 		eS8, 		RW,		eDefault,	60000, 	1.0f},
-		/*34*/ {"Operational mode",					 		47137, 		eS8, 		RW,		eDefault,	60000, 	1.0f},
-		/*35*/ {"Operational mode heat",			 	47138, 		eS8, 		RW,		eDefault,	60000, 	1.0f},
-		/*36*/ {"Operational mode brine",			 	47139, 		eS8, 		RW,		eDefault,	60000, 	1.0f},
-		/*37*/ {"DM start heating", 					 	47206, 		eS16, 	RW,		eDefault,	60000, 	1.0f},
-		/*38*/ {"DM between add. steps", 			 	47209, 		eS16, 	RW,		eDefault,	60000, 	1.0f},
-		/*39*/ {"Holiday activated", 						48043, 		eU8, 		RW,		eDefault,	60000, 	0.0f},
-		/*40*/ {"Room sensor setpoint S1",			47398, 		eS16,		RW,		eAnalog,	60000, 	0.0f},
+		/*16*/ {"Heat Meter", 			 			40771, 		eU32, 	R, 		eAnalog, 	60000, 	1.0f},
+		/*17*/ {"Adjust Temp indoor",				40874, 		eS16, 	R,		eAnalog, 	60000, 	0.5f},
+		/*18*/ {"Adjust Temp outdoor",				40875, 		eS16, 	R,		eAnalog, 	60000, 	0.5f},
+		/*19*/ {"AZ1-BT50 Room temp", 				41213, 		eS16, 	R, 		eAnalog, 	60000, 	0.5f},
+		/*20*/ {"Smart Home Mode", 					41265, 		eU8, 	RW,		eDefault,	60000, 	0.0f},
+		/*21*/ {"Brine Pump State EP14", 			41433, 		eU8, 	R, 		eDefault,	60000, 	0.0f},
+		/*22*/ {"Software version", 				43001, 		eU16, 	R, 		eDefault,	60000, 	0.0f},
+		/*23*/ {"DegreeMinute", 					43005, 		eS16, 	R,		eAnalog, 	60000, 	1.0f},
+		/*24*/ {"Compressor starts EB100-EP14", 	43416, 		eS32, 	R, 		eDefault, 	60000, 	0.0f},
+		/*25*/ {"Tot.op.time compr", 				43420, 		eS32, 	R, 		eDefault,	60000, 	0.0f},
+		/*26*/ {"Tot. HW op.time compr", 			43424, 		eS32, 	R, 		eDefault,	60000, 	0.0f},
+		/*27*/ {"Compressor State EP14", 			43427, 		eU8, 	R, 		eDefault, 	60000, 	0.0f},
+		/*28*/ {"Supply Pump State EP14", 			43431, 		eU8, 	R, 		eDefault,	60000, 	0.0f},
+		/*29*/ {"EB100-EP14 Prio", 					44243, 		eU8, 	R, 		eDefault,	60000,	0.0f},
+		/*30*/ {"Alarm", 							45001, 		eS16, 	R, 		eDefault, 	60000, 	0.0f},
+		/*31*/ {"Alarm reset", 			 			45171, 		eU8, 	RW,		eDefault,	60000, 	0.0f},
+		/*32*/ {"Hot water mode",					47041, 		eS8, 	RW,		eDefault,	60000, 	1.0f},
+		/*33*/ {"Periodic hotwater",				47050, 		eS8, 	RW,		eDefault,	60000, 	1.0f},
+		/*34*/ {"Operational mode",					47137, 		eS8, 	RW,		eDefault,	60000, 	1.0f},
+		/*35*/ {"Operational mode heat",			47138, 		eS8, 	RW,		eDefault,	60000, 	1.0f},
+		/*36*/ {"Operational mode brine",			47139, 		eS8, 	RW,		eDefault,	60000, 	1.0f},
+		/*37*/ {"DM start heating", 				47206, 		eS16, 	RW,		eDefault,	60000, 	1.0f},
+		/*38*/ {"DM between add. steps", 			47209, 		eS16, 	RW,		eDefault,	60000, 	1.0f},
+		/*39*/ {"Holiday activated", 				48043, 		eU8, 	RW,		eDefault,	60000, 	0.0f},
+		/*40*/ {"Room sensor setpoint S1",			47398, 		eS16,	RW,		eAnalog,	60000, 	0.0f},
 	};
 const byte numIoPoints = sizeof(iopoints) / sizeof(IoElement_t);
 IoContainer io("Nibe", iopoints, numIoPoints);
@@ -226,6 +232,9 @@ void setup() {
 #endif
 
 EasyOta.setup();
+if (!MDNS.begin("Nibe")) {             // Start the mDNS responder for esp8266.local
+    Serial.println("Error setting up MDNS responder!");
+}
 
  #ifdef DEBUG
   Debug.begin("DEBUG"); // Initiaze the telnet server

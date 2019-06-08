@@ -181,6 +181,7 @@ bool IoContainer::SetIoVal(int idx, IoVal io)
 	return bFound;
 }
 
+// SetIoVal from array, copied to IoVal
 bool IoContainer::SetIoVal(int idx, char *pVal, size_t length)
 {
 	IoVal io = {0};
@@ -215,6 +216,7 @@ bool IoContainer::SetIoSzVal(int idx, char *pVal, size_t length)
 	return bFound;
 }
 
+//Set container value from char
 bool IoContainer::SetIoSzVal(char *pTag, char *pVal, size_t length)
 {
 	bool bUpdated = false;
