@@ -1,8 +1,9 @@
+
 #include <Arduino.h>
+#include "EasyOta.h"
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
-#include <ESP8266httpUpdate.h>
 #include <Ticker.h>
 #include <AsyncMqttClient.h>
 #include "NibeHeater.h"
@@ -97,7 +98,7 @@ NibeMessage *pNibeMsgHandler;
 NibeHeater nibeHandler(&pNibeMsgHandler, &io);
 
 void processCmdRemoteDebug();
-void OtaUpdate() ;
+//void OtaUpdate() ;
 
 bool SendReply(byte b)
 {
@@ -224,6 +225,8 @@ void setup() {
   }
 #endif
 
+EasyOta.setup();
+
  #ifdef DEBUG
   Debug.begin("DEBUG"); // Initiaze the telnet server
   Debug.setResetCmdEnabled(true); // Enable the reset command
@@ -233,11 +236,12 @@ void setup() {
 	
 	io.PublishFuncPtr(publish);
 	connectToWifi();
+	
 
 }
 
 void loop() {
-
+	
     while (Serial.available())
 	  {
 			pNibeMsgHandler->AddByte(Serial.read());
@@ -249,9 +253,11 @@ void loop() {
 #ifdef DEBUG
     Debug.handle();
 #endif
-
+	EasyOta.checkForUpload();
     yield();
 }
+
+
 
 #ifdef DEBUG
 void processCmdRemoteDebug() {
@@ -261,7 +267,7 @@ void processCmdRemoteDebug() {
 	if (lastCmd == "update")
 	{
 		DEBUG_PRINT("Request update");
-		OtaUpdate();
+		//OtaUpdate();
 	}
 	else if (lastCmd == "reason")
 	{
@@ -278,23 +284,23 @@ void processCmdRemoteDebug() {
 }
 #endif
 
-void OtaUpdate() {
-  t_httpUpdate_return ret = ESPhttpUpdate.update("192.168.10.10", 80, "/firmware.bin");
+// void OtaUpdate() {
+//   t_httpUpdate_return ret = ESPhttpUpdate.update("192.168.10.10", 80, "/firmware.bin");
 
-	DEBUG_PRINT("Start update");
+// 	DEBUG_PRINT("Start update");
 
-    switch (ret) {
-      case HTTP_UPDATE_FAILED:
-        DEBUG_PRINT("HTTP_UPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
-        break;
+//     switch (ret) {
+//       case HTTP_UPDATE_FAILED:
+//         DEBUG_PRINT("HTTP_UPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+//         break;
 
-      case HTTP_UPDATE_NO_UPDATES:
-        DEBUG_PRINT("HTTP_UPDATE_NO_UPDATES");
-        break;
+//       case HTTP_UPDATE_NO_UPDATES:
+//         DEBUG_PRINT("HTTP_UPDATE_NO_UPDATES");
+//         break;
 
-      case HTTP_UPDATE_OK:
-        DEBUG_PRINT("HTTP_UPDATE_OK");
-        break;
-		}
+//       case HTTP_UPDATE_OK:
+//         DEBUG_PRINT("HTTP_UPDATE_OK");
+//         break;
+// 		}
     
-}
+// }
