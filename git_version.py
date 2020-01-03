@@ -2,7 +2,7 @@ Import("env")
 import subprocess
 
 # access to global construction environment
-print env
+print (env)
 
 # Git revision
 version = subprocess.check_output(["git", "rev-parse", "HEAD"]).strip()
@@ -12,4 +12,4 @@ env.Replace(CPPDEFINES=[
 ])
 
 # Dump construction environments (for debug purpose)
-print env.Dump()
+print (env.Dump())
