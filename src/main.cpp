@@ -99,7 +99,11 @@ IoElement_t iopoints[] =
         /*41*/ {"Smart energy active",          48979, eU8,  RW, eDefault, 60000, 0.0f},
         /*42*/ {"Smart energy price model",     48981, eU8,  RW, eDefault, 60000, 0.0f},
         /*43*/ {"Smart energy price",           48982, eS16, RW, eDefault, 60000, 0.0f},
+        /*44*/ {"Smart Price Price Level",      41929, eU8,  RW, eDefault, 60000, 0.0f},
+        /*45*/ {"Smart Price Adaption Price",   41928, eS16, RW, eDefault, 60000, 0.0f},
+        /*46*/ {"Smart Price Adaption State",   44908, eU8,   R, eDefault, 60000, 0.0f},
 };
+
 const byte numIoPoints = sizeof(iopoints) / sizeof(IoElement_t);
 IoContainer io("Nibe", iopoints, numIoPoints);
 
@@ -219,9 +223,9 @@ bool publish(char *topic, char *value)
 {
     uint16_t status = mqttClient.publish(topic, 0, false, value);
     DEBUG_PRINT("Publish %s - %s (%d)", topic, value, status);
-
-	if (status != 1) {
-		ESP.reset();
+    if (status != 1) {
+        system_restart();
+    }
 	}
     return mqttClient.publish(topic, 0, false, value);
 }
