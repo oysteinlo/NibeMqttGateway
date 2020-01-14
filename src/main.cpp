@@ -224,9 +224,9 @@ bool publish(char *topic, char *value)
     uint16_t status = mqttClient.publish(topic, 0, false, value);
     DEBUG_PRINT("Publish %s - %s (%d)", topic, value, status);
     if (status != 1) {
-        system_restart();
+        ESP.reset();
     }
-	}
+
     return mqttClient.publish(topic, 0, false, value);
 }
 
