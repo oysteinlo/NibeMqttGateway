@@ -27,6 +27,7 @@
 #endif
 
 #define MQTT_HOST IPAddress(192, 168, 10, 10)
+IPAddress myIP(192, 168, 10, 20); 
 
 #if ASYNC_TCP_SSL_ENABLED
 #define MQTT_SECURE true
@@ -119,7 +120,7 @@ bool SendReply(byte b)
     return true;
 }
 
-void DebugPrint(char text[])
+static void DebugPrint(char text[])
 {
     rdebugpDln(text);
 }
@@ -141,6 +142,7 @@ void subscribe()
 void connectToWifi()
 {
     DEBUG_PRINT("Connecting to Wi-Fi...");
+    WiFi.config(myIP, IPAddress(192, 168, 10, 1), IPAddress(255, 255, 255, 0));
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
     WiFi.hostname(HOST_NAME);
@@ -217,6 +219,10 @@ bool publish(char *topic, char *value)
 {
     uint16_t status = mqttClient.publish(topic, 0, false, value);
     DEBUG_PRINT("Publish %s - %s (%d)", topic, value, status);
+
+	if (status != 1) {
+		ESP.reset();
+	}
     return mqttClient.publish(topic, 0, false, value);
 }
 

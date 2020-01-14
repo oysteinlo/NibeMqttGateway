@@ -100,7 +100,7 @@ bool IoContainer::IsPublished(IoElement *pIo)
 		bPublished = pIo->ioVal.i8Val == pIo->pubIoVal.i8Val;
 		break;
 	case eS16:
-		bPublished = pIo->ioVal.i16Val == pIo->pubIoVal.i16Val;
+		bPublished = abs(pIo->ioVal.i16Val - pIo->pubIoVal.i16Val)/10.0f < pIo->fPublishDeadband;
 		break;
 	case eS32:
 		bPublished = pIo->ioVal.i32Val == pIo->pubIoVal.i32Val;

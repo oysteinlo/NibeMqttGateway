@@ -107,6 +107,7 @@ public:
 	bool SetIoVal(uint16_t adress, char * pVal, size_t length);
 	bool SetIoSzVal(int idx, char * pVal, size_t length);
 	bool SetIoSzVal(char *pTag, char *pVal, size_t length);
+	bool SetIoSzVal(IoElement *pIoEl, char *pVal, size_t length);
 	void SetErrorVal(IoType_t type, IoVal val);
 	
 	int GetExpiredIoElement(IoDirection eIoDir);
